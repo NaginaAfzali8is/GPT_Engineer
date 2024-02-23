@@ -196,6 +196,12 @@
             transition: background-color 0.3s;
         }
 
+        .header a {
+            text-decoration: none;
+            /* Remove underline */
+            color: inherit;
+            /* Inherit text color */
+        }
         #removekey:hover {
             background-color: #0859D7;
         }
@@ -246,10 +252,11 @@
         <div class="main">
             <div class="content">
                 <div class="header">
-                    <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
-                        alt="Your Company Logo">
-                    <h1>GPT Engineer By I8is</h1>
-
+                    <a href="https://i8is.com">
+                        <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
+                            alt="Your Company Logo">
+                        <h1>GPT Engineer By I8is</h1>
+                    </a>
                 </div>
             </div>
             <div class="fixed-form">
@@ -404,6 +411,7 @@
                 console.error('There was a problem with your fetch operation:', error);
             });
     }
+    
     // Function to update the page content with user data
     function updateUserContent(data) {
         var userDataContainer = document.getElementById('user-data-container');
@@ -419,20 +427,25 @@
                 projectContainer.classList.add('project-container');
                 projectContainer.style.display = 'flex';
                 projectContainer.style.alignItems = 'center';
+                projectContainer.style.justifyContent = 'space-between';
+                projectContainer.style.backgroundColor = '#19355F';
+                projectContainer.style.padding = '10px';
+                projectContainer.style.margin = '10px 0';
+                projectContainer.style.borderRadius = '10px';
 
                 // Create an SVG element for the custom download icon
-var downloadIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-downloadIcon.setAttribute('class', 'download-icon');
-downloadIcon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-downloadIcon.setAttribute('width', '20');
-downloadIcon.setAttribute('height', '20');
-downloadIcon.setAttribute('viewBox', '0 0 20 20'); // Adjusted viewBox
-downloadIcon.innerHTML = '<path d="M0 0h20v20H0z" fill="none"/><path fill="currentColor" d="M2 14h16V12H2zm6-5V2H8v5H5l5 5 5-5H11z"/>';
+                var downloadIcon = document.createElement("img");
+                downloadIcon.src = "https://cdn-icons-png.flaticon.com/512/189/189249.png";
+                downloadIcon.setAttribute('class', 'download-icon');
+                downloadIcon.setAttribute('width', '30');
+                downloadIcon.setAttribute('height', '30');
+                console.log(downloadIcon);
 
                 // Create a paragraph element for the project name
                 var projectParagraph = document.createElement('p');
                 projectParagraph.textContent = project;
                 projectParagraph.style.marginLeft = '10px'; // Add left margin for spacing
+                projectParagraph.style.color = 'white'; // Add left margin for spacing
 
                 // Attach click event listener to trigger download
                 downloadIcon.addEventListener('click', function () {
@@ -451,6 +464,7 @@ downloadIcon.innerHTML = '<path d="M0 0h20v20H0z" fill="none"/><path fill="curre
             userDataContainer.textContent = 'No data available';
         }
     }
+
 
 
 
