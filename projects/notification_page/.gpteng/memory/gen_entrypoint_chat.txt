@@ -1,0 +1,4 @@
+```sh
+# Since there are no external dependencies, we can directly run the main.py script
+python main.py
+```

@@ -18,8 +18,7 @@ from gpt_engineer.tools.custom_steps import clarified_gen, lite_gen, self_heal
 import zipfile
 from flask_pymongo import PyMongo
 from datetime import datetime
-from dotenv import load_dotenv
-import io
+
 
 app = Flask(__name__)  # creates a Flask web app
 app.secret_key = 'Nim123??'  # Set a secret key for session management
@@ -37,42 +36,40 @@ else:
 
 # Define User model
 
+
 class User:
-    def __init__(self, openai_key, project_name, api_cost, project_zip_binary):
+    def __init__(self, openai_key, project_name, api_cost):
         self.openai_key = openai_key
         self.project_name = project_name
         self.api_cost = api_cost
-        self.project_zip_binary = project_zip_binary  # Binary data
         self.created_at = datetime.utcnow()
 
     def save_to_mongo(self):
         users_collection = mongo.db.users
-        existing_user = users_collection.find_one({'openai_key': self.openai_key})
+        existing_user = users_collection.find_one({
+            'openai_key': self.openai_key
+        })
+
         if existing_user:
-            # If user exists, update the project_name, api_cost, and project_zip_binary
+            # If user exists, update the project_name and api_cost arrays
             users_collection.update_one(
                 {'openai_key': self.openai_key},
                 {
                     '$addToSet': {
-                        'project_array': {
-                            'project_name': self.project_name,
-                            'api_cost': self.api_cost,
-                            'project_zip_binary': self.project_zip_binary
-                        }
+                        'project_name': self.project_name,
+                        'api_cost': self.api_cost
                     }
                 },
                 upsert=True
+
             )
         else:
             # If user doesn't exist, create a new document
             user_data = {
                 'openai_key': self.openai_key,
-                'project_array': [{
-                    'project_name': self.project_name,
-                    'api_cost': self.api_cost,
-                    'project_zip_binary': self.project_zip_binary
-                }],
-                'created_at': datetime.utcnow()
+                'project_name': [self.project_name],
+                'api_cost': [self.api_cost],
+                'created_at': self.created_at
             }
             result = users_collection.insert_one(user_data)
             return result.inserted_id
@@ -82,7 +79,7 @@ class User:
         users_collection = mongo.db.users
         existing_user = users_collection.find_one({
             'openai_key': openai_key,
-            'project_array': {'$elemMatch': {'project_name': project_name}}
+            'project_name': {'$elemMatch': {'$eq': project_name}}
         })
         return existing_user is not None
 
@@ -90,16 +87,12 @@ class User:
     def find_by_openai_key(openai_key):
         users_collection = mongo.db.users
         user_data = users_collection.find_one({'openai_key': openai_key})
+        # Convert ObjectId to string
         if user_data:
-            user_data['_id'] = str(user_data['_id'])  # Convert ObjectId to string
+            user_data['_id'] = str(user_data['_id'])
         return user_data
 
-    @staticmethod
-    def get_by_project_name(project_name):
-        users_collection = mongo.db.users
-        user = users_collection.find_one({'project_array.project_name': project_name})
-        return user
-    
+
 # def load_env_if_needed():
 #     """
 #     Load environment variables if the OPENAI_API_KEY is not already set.
@@ -138,15 +131,14 @@ def setup_openai_key():
             }
             return jsonify(response_data)
         else:
+
             # Store the project name in the session
             session['project_name'] = projectName
             session['openai_key'] = openai_key  # Store the key in the session
             openai.api_key = openai_key
 
-            # Replace spaces with underscores and strip leading/trailing spaces
-            project_path = f"projects/{projectName.strip().replace(' ', '_')}"
-
             # Create the project directory if it doesn't exist
+            project_path = f"projects/{projectName}"
             if not os.path.exists(project_path):
                 os.makedirs(project_path)
 
@@ -156,7 +148,6 @@ def setup_openai_key():
                 temperature=0.1,
                 azure_endpoint="",  # Set Azure endpoint if applicable
             )
-            
 
             prompt = projectDesc  # Use project description as prompt
 
@@ -164,6 +155,9 @@ def setup_openai_key():
             code_gen_fn = gen_code
             execution_fn = execute_entrypoint
             improve_fn = improve
+
+            # if not os.path.exists(preprompts_path):
+            #     os.makedirs(preprompts_path)
 
             memory = DiskMemory(memory_path(project_path))
             execution_env = DiskExecutionEnv()
@@ -180,24 +174,24 @@ def setup_openai_key():
             # Generate or improve project
             files_dict = agent.init(prompt)
 
-            # Create a zip file in memory
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                for filename, content in files_dict.items():
-                    zip_file.writestr(filename, content)
+            # Store files in the project directory
+            store.upload(files_dict)
             api_cost = ai.token_usage_log.usage_cost()
+            api_cost = '$0.000445'
+            session['api_cost'] = api_cost
 
-            # Save project zip file to MongoDB
-            zip_file_binary = zip_buffer.getvalue()
-            new_user = User(openai_key, projectName, api_cost, zip_file_binary)
+            print("Project created successfully!")
+
+            # Save project data to MongoDB
+            new_user = User(openai_key, projectName, api_cost)
             inserted_id = new_user.save_to_mongo()
 
             if inserted_id:
-                print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
+                print(f"User data saved to MongoDB with ID: {inserted_id}")
             else:
-                print("Failed to save project zip file to MongoDB.")
+                print("Failed to save user data to MongoDB.")
 
-            zip_buffer.close()
+            project_path = f"projects/{projectName}"
 
             # Create a zip file of the project directory
             # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
@@ -221,15 +215,13 @@ def setup_openai_key():
                 'api_cost': api_cost
             }
             return jsonify(response_data)
-        
 
     return render_template("index.html")
+
 
 @app.route('/success')
 def success():
     if 'openai_key' in session:
-         # Reload environment variables
-        load_dotenv()
         apicost = session.get('api_cost')  # Retrieve project name from session
         # Retrieve project name from session
         project_name = session.get('project_name')
@@ -255,66 +247,25 @@ def success():
 
 @app.route('/download')
 def download():
-    # Retrieve project name from request args
+    # Get the filename from the session
+    file_name = session.get('project_name')
+ # Retrieve project name from session
+    # project_name = session.get('project_name')
     project_name = request.args.get('filename')
-    
-    # Get the user from MongoDB based on the project name
-    user = User.get_by_project_name(project_name)
-    
-    if user and 'project_array' in user and len(user['project_array']) > 0:
-        # Retrieve the zip file binary from the first project in the project_array
-        zip_file_binary = user['project_array'][0]['project_zip_binary']
-        
-        # Create a zip file in memory
-        zip_buffer = io.BytesIO(zip_file_binary)
-        zip_filename = f'{project_name}.zip'
-        
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Write the zip file content directly from the binary data
-            zipf.writestr(zip_filename, zip_file_binary)
-        
-        zip_buffer.seek(0)
-        
-# Set the Content-Type header for ZIP files
-        return send_file(zip_buffer, as_attachment=True, download_name=zip_filename, mimetype='application/zip')
-    else:
-        return 'Project not found!'
-    
+    project_path = f"projects/{project_name}"
 
-@app.route('/setapikey', methods=['POST'])
-def set_api_key():
-    """
-    Update the OPENAI_API_KEY in the .env file with the provided API key.
-    """
-    api_key = request.args.get('apikey')  # Use form data instead of URL query parameters
-    if api_key:
-        load_dotenv()  # Load existing environment variables
-        env_path = os.path.join(os.getcwd(), ".env")  # Path to the .env file
-        # Update the OPENAI_API_KEY value in the .env file
-        with open(env_path, 'a') as env_file:
-            env_file.write(f"OPENAI_API_KEY={api_key}\n")
+    # Define the path where you want to save the zip file
+    zip_filename = f'projectsZip/{project_name}'
 
-        # Reload environment variables after updating .env file
-        load_dotenv(dotenv_path=env_path)
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        return 'API key updated successfully!'
-    else:
-        return 'API key not provided!'
+    # Create a zip file of the project directory
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(project_path):
+            for file in files:
+                zipf.write(os.path.join(root, file), os.path.relpath(
+                    os.path.join(root, file), os.path.join(project_path, '..')))
 
-
-def set_key(file_path, key, value):
-    """
-    Update the value of the specified key in the given file.
-    """
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-
-    with open(file_path, 'w') as file:
-        for line in lines:
-            if line.startswith(f"{key}="):
-                file.write(f"{key}={value}\n")
-            else:
-                file.write(line)
+    # Send the zip file as an attachment
+    return send_file(zip_filename, as_attachment=True)
 
 
 @app.route('/user', methods=['GET'])
@@ -325,12 +276,6 @@ def get_user_by_openai_key():
 
     user_data = User.find_by_openai_key(openai_key)
     if user_data:
-        if 'project_array' in user_data:
-            # Iterate through each item in the project array
-            for project in user_data['project_array']:
-                # Remove the zip file binary data from each project dictionary
-                if 'project_zip_binary' in project:
-                    project.pop('project_zip_binary')
         return jsonify(user_data)   
     else:
         return jsonify({'error': 'User not found'})

@@ -202,7 +202,6 @@
             color: inherit;
             /* Inherit text color */
         }
-
         #removekey:hover {
             background-color: #0859D7;
         }
@@ -313,32 +312,7 @@
     }
     function submitkey() {
         let openai_key = document.getElementById('openai_key').value;
-        if (!openai_key) {
-            openai_key = localStorage.getItem('openai_key')
-        }
-        if (openai_key) {
-            localStorage.setItem('openai_key', openai_key);
-            // Send an AJAX request to update the API key
-            fetch(`/setapikey?apikey=${encodeURIComponent(openai_key)}`, {
-                method: 'POST'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        oldProjects(openai_key)
-                        console.log('API key updated successfully!');
-                    } else {
-                        console.error('Failed to update API key');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-        } else {
-            console.error('OpenAI key not provided');
-        }
-
         localStorage.setItem('openai_key', openai_key);
-
         onloadf()
     }
     function downloadFile(filename) {
@@ -348,14 +322,14 @@
         }
 
         // Check if the filename has a .zip extension, if not, add it
-        // if (!filename.endsWith('.zip')) {
-        //     filename += '.zip';
-        // }
+        if (!filename.endsWith('.zip')) {
+            filename += '.zip';
+        }
 
         // Create a temporary anchor element
         var downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute('href', '/download?filename=' + encodeURIComponent(filename));
-        // downloadAnchor.setAttribute('download', filename);
+        downloadAnchor.setAttribute('download', filename);
 
         // Programmatically trigger a click on the anchor element
         downloadAnchor.click();
@@ -363,7 +337,6 @@
     // This code runs when the DOM content is loaded
     document.addEventListener('DOMContentLoaded', function () {
         onloadf()
-
     });
     function onloadf() {
         // Retrieve the openai_key from localStorage
@@ -371,15 +344,13 @@
 
         // Check if the openai_key exists in localStorage
         if (openai_key) {
-            oldProjects(openai_key)
-            // submitkey()
-
             document.getElementById('openkey').style.display = 'none';
             let createProjectButton = document.getElementById('createpro');
             // Enable the button
             document.getElementById('removekey').style.display = 'block';
 
             createProjectButton.disabled = false;
+            oldProjects(openai_key)
         } else {
             // The openai_key does not exist in localStorage
             console.log('openai_key not found in localStorage');
@@ -440,16 +411,16 @@
                 console.error('There was a problem with your fetch operation:', error);
             });
     }
-
+    
     // Function to update the page content with user data
     function updateUserContent(data) {
         var userDataContainer = document.getElementById('user-data-container');
-        if (data && data.project_array) {
+        if (data && data.project_name) {
             // Clear existing content
             userDataContainer.innerHTML = '';
 
             // Add user data to the page
-            var projects = data.project_array;
+            var projects = data.project_name;
             projects.forEach(project => {
                 // Create a container div for each project
                 var projectContainer = document.createElement('div');
@@ -472,13 +443,13 @@
 
                 // Create a paragraph element for the project name
                 var projectParagraph = document.createElement('p');
-                projectParagraph.textContent = project.project_name;
+                projectParagraph.textContent = project;
                 projectParagraph.style.marginLeft = '10px'; // Add left margin for spacing
                 projectParagraph.style.color = 'white'; // Add left margin for spacing
 
                 // Attach click event listener to trigger download
                 downloadIcon.addEventListener('click', function () {
-                    downloadFile(project.project_name);
+                    downloadFile(project);
                 });
 
                 // Append the project name and then the download icon to the container
