@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1 {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    form {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    input[type="text"],
+    textarea {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        resize: vertical;
+    }
+
+    input[type="submit"] {
+        background-color: #4caf50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+
+    .download-btn {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    /* Styling for the download button */
+    .download-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        background-color: #4CAF50;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background-color 0.3s, transform 0.2s;
+        font-size: 16px;
+    }
+
+    .download-button:hover {
+        background-color: #45a049;
+        transform: translateY(-2px);
+    }
+
+    /* Styling for the SVG icon */
+    .download-button svg {
+        margin-left: 8px;
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Styling for the file name */
+    .file-name {
+        font-weight: bold;
+        color: #007bff;
+        /* Blue color for highlighting */
+    }
+
+    /* Styling for the API cost */
+    .api-cost {
+        color: #333;
+        /* Dark gray color */
+    }
+
+    /* Styling for the success message */
+    .success-message {
+        color: #4CAF50;
+        /* Green color */
+    }
+
+    html {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        height: 100vh;
+    }
+
+    .sidebar {
+        width: 25%;
+        background-color: #f2f2f2;
+        padding: 20px;
+    }
+
+    .main {
+        flex: 1;
+        padding: 20px;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .dashboard,
+.chat-area {
+    background-color: #fff;
+    padding: 20px;
+}
+
+.chat-area {
+    position: fixed;
+    bottom: 20px;
+    height: fit-content; /* Set the height of the chat area to fit its content */
+
+}
+
+    .user-info {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+    }
+
+    .new-chat h2 {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .new-chat h2 i {
+        margin-right: 10px;
+    }
+
+    @media only screen and (max-width: 768px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+        }
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="new-chat">
+                <h2><i class="fas fa-plus-circle"></i> New Chat</h2>
+            </div>
+            <!-- New chat option goes here -->
+            <h2>Chat History</h2>
+            <!-- Sidebar content goes here -->
+            <div class="user-info">
+                <p>User Name</p>
+            </div>
+        </div>
+        <div class="main">
+            <!-- Logo -->
+            <div class="header">
+                <img src="images/i8islogo-removebg-preview.png" alt="Your Company Logo">
+            </div>
+            <!-- Create Project Section -->
+            <div class="dashboard">
+                <h1>GPT Engineer by I8is</h1>
+                <!-- Dashboard content goes here -->
+            </div>
+            <!-- Form Section -->
+            <div class="chat-area">
+                <h1>GPT Engineer</h1>
+                <form id="openaiForm">
+                    <label for="openai_key">OpenAI API Key:</label><br>
+                    <input type="text" id="openai_key" name="openai_key" required><br>
+        
+                    <label for="project_type">Project Name:</label><br>
+                    <input type="text" id="project_type" name="project_type" required><br>
+        
+                    <label for="project_description">Project Description:</label><br>
+                    <textarea id="project_description" name="project_description" rows="4" cols="50" required></textarea><br>
+        
+                    <input type="submit" value="Submit">
+                </form>
+        
+                <div class="download-btn" id="download-message" style="display: none;">
+                    <p id="success-message" class="success-message">Your project has been created successfully. Click the button below to download it.</p>
+        
+                    <div>
+                        <!-- Enhanced download button -->
+                        <a href="/download" id="download-link" class="download-button">
+                            <span id="file-name">Download File</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
+                                <polyline points="8 17 12 21 16 17"></polyline>
+                                <line x1="12" y1="12" x2="12" y2="21"></line>
+                                <line x1="7" y1="7" x2="17" y2="7"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

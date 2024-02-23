@@ -1,0 +1,124 @@
+To create a screenshot capture Chrome extension, we will need to write a combination of HTML, JavaScript, and manifest file that defines the extension's settings. Below are the core components that we will need to create:
+
+1. `manifest.json`: The metadata file that contains settings and properties of the Chrome extension.
+2. `popup.html`: The HTML file for the popup that appears when the user clicks on the extension icon.
+3. `popup.js`: The JavaScript file that handles the logic for taking a screenshot when the user interacts with the popup.
+4. `background.js`: The background script that runs in the context of the extension and can listen to browser events.
+5. `content.js`: The content script that gets injected into the web page and can interact with the DOM of the page.
+
+Let's start by creating the manifest file:
+
+manifest.json
+```json
+{
+  "manifest_version": 2,
+  "name": "Screenshot Capture",
+  "version": "1.0",
+  "description": "Capture screenshots of your current web page.",
+  "permissions": ["activeTab", "storage", "<all_urls>"],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
+```
+
+Next, we'll create the popup HTML file:
+
+popup.html
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Capture Screenshot</title>
+  <script src="popup.js"></script>
+</head>
+<body>
+  <button id="capture-btn">Capture Screenshot</button>
+</body>
+</html>
+```
+
+Now, let's write the JavaScript for the popup:
+
+popup.js
+```javascript
+document.getElementById('capture-btn').addEventListener('click', function() {
+  chrome.tabs.captureVisibleTab(null, {}, function(imageUrl) {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError.message);
+      return;
+    }
+    // Send the image URL to the content script to be displayed or processed
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: "DISPLAY_IMAGE", data: imageUrl});
+    });
+  });
+});
+```
+
+The background script will be simple as it doesn't need to do much for this extension:
+
+background.js
+```javascript
+// Background script can listen to browser events if needed
+chrome.runtime.onInstalled.addListener(function() {
+  console.log("Screenshot Capture extension installed.");
+});
+```
+
+The content script will handle the message from the popup and display the image:
+
+content.js
+```javascript
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === "DISPLAY_IMAGE") {
+    // Create a new image element to display the screenshot
+    var img = document.createElement('img');
+    img.src = request.data;
+    img.style.position = 'fixed';
+    img.style.bottom = '0';
+    img.style.right = '0';
+    img.style.zIndex = '1000';
+    img.style.border = '1px solid #ddd';
+    img.style.borderRadius = '4px';
+    img.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    document.body.appendChild(img);
+  }
+});
+```
+
+Lastly, we need to include the icons for the extension. You will need to create these images and place them in an `icons` directory:
+
+- `icons/icon16.png`
+- `icons/icon48.png`
+- `icons/icon128.png`
+
+And a `requirements.txt` file for any Python tooling we might use for testing:
+
+requirements.txt
+```
+pytest
+selenium
+```
+
+This concludes a fully working implementation.

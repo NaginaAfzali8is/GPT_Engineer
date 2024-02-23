@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Available Trains</h2>
+    <ul>
+        {% for train in trains %}
+            <li>{{ train.name }} - Capacity: {{ train.capacity }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('main.book') }}">Book a seat</a>
+{% endblock %}

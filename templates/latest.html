@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 20%;
+            background-color: #4372B8;
+            padding: 0 20px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background-color: white;
+        }
+
+        .content {
+            text-align: center;
+            margin-top: -25%;
+            /* Adjust based on the form height */
+        }
+
+        .fixed-form {
+            position: fixed;
+            bottom: 20px;
+            left: 23.5%;
+            /* Match the sidebar width */
+            width: 72.5%;
+            /* Adjust based on the sidebar width */
+            background-color: whitesmoke;
+            padding: 20px;
+            border-top: 1px solid #ccc;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"],
+        textarea {
+            width: calc(100% - 22px);
+            padding: 20px 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #c5c5c5;
+            border-radius: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            outline: none;
+            font-size: 18px;
+            font-weight: 500;
+            color: grey;
+        }
+
+        input::placeholder {
+            font-size: 18px;
+            color: grey;
+            font-weight: 500;
+        }
+
+        button[type="submit"] {
+            background-color: #012152;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0859D7;
+        }
+
+        button[type="submit"]:disabled {
+            background-color: #BFBFBF;
+            /* Use a different color for the disabled state */
+            cursor: not-allowed;
+            /* Change cursor to not-allowed for disabled state */
+            /* You may also adjust other styles like color, border, etc. for the disabled state */
+        }
+
+        @media only screen and (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar,
+            .main {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .fixed-form {
+                left: 0;
+                width: 100%;
+            }
+
+            .content {
+                margin-bottom: 120px;
+                /* Increase for smaller screens if necessary */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="new-chat">
+                <h2 style="color: white;"><i class="fas fa-plus-circle"></i> New Chat</h2>
+            </div>
+            <h2 style="color: white;">Chat History</h2>
+            <div class="user-info">
+                <p style="color: white; font-weight: 600;">User Name</p>
+            </div>
+        </div>
+        <div class="main">
+            <div class="content">
+                <div class="header">
+                    <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
+                        alt="Your Company Logo">
+                    <h1>How can I help you today?</h1>
+                </div>
+            </div>
+            <div class="fixed-form">
+                <form>
+                    <label style="color: black; font-size: 20px;" for="openai_key">OpenAI API Key:</label><br>
+                    <input placeholder="OpenAI Key" type="text" id="openai_key" name="openai_key" required><br>
+                    <div style="text-align: right; margin-right: 20px;">
+                        <button type="submit" value="Add Key">Set Key</button>
+                    </div>
+                    <label style="color: black; font-size: 20px;" for="project_type">Project Name:</label><br>
+                    <input placeholder="Project Name" type="text" id="project_type" name="project_type" required><br>
+                    <label style="color: black; font-size: 20px;" for="project_description">Project
+                        Description:</label><br>
+                    <textarea placeholder="Project Description" id="project_description" name="project_description"
+                        rows="4" required></textarea><br>
+                    <button type="submit" disabled value="Submit">Create Project</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

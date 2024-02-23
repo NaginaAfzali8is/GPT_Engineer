@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Book a seat</h2>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.passenger_name.label }}<br>
+            {{ form.passenger_name(size=20) }}
+        </p>
+        <p>
+            {{ form.train.label }}<br>
+            {{ form.train() }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h1>Welcome to the Train Booking App</h1>
+<ul>
+    {% for train in trains %}
+    <li>{{ train.name }} from {{ train.origin }} to {{ train.destination }} at {{ train.departure_time }} - <a href="{{ url_for('main.book', train_id=train.id) }}">Book Now</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
