@@ -4,14 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interface</title>
+    <link rel="icon" type="image/png" href="https://i8is.com/wp-content/uploads/2023/09/FavIcon-new-min.png">
+
+    <title>GPT Engineer By I8is</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
         integrity="sha512-VzEu7SdDjEuwpX6jf6CB+Rj7pfRn2wkgmF2wp8ZBGWGshGj6Zw8WIMC7m5hJjQzrKZDyCgMUNB5LMdsV1Z1upQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Add Font Awesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -232,7 +234,37 @@
                 /* Increase for smaller screens if necessary */
             }
         }
-    </style>
+    
+    /* Preloader styles */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+    z-index: 9999; /* Ensure the preloader appears on top of other content */
+    display: none; /* Initially hidden */
+}
+
+.spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border: 4px solid #b2b1b1; /* Light grey border */
+    border-top: 4px solid #3498db; /* Blue border on top */
+    border-radius: 50%; /* Circle shape */
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite; /* Rotate animation */
+}
+
+/* Rotate animation */
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
 </head>
 
 <body>
@@ -299,6 +331,10 @@
                     <button type="submit" id="createpro" disabled value="Submit">Create Project</button>
                 </form>
             </div>
+            <!-- Preloader -->
+<div class="preloader">
+    <div class="spinner"></div>
+</div>
         </div>
     </div>
 </body>
@@ -307,6 +343,8 @@
     function removekey() {
         localStorage.removeItem('openai_key');
         updateUserContent(null)
+        document.getElementById('download-message').style.display = 'none';
+
         document.getElementById('openkey').style.display = 'block';
         document.getElementById('removekey').style.display = 'none';
 
@@ -318,21 +356,30 @@
         }
         if (openai_key) {
             localStorage.setItem('openai_key', openai_key);
+            // Show the preloader
+// Show the preloader
+document.querySelector('.preloader').style.display = 'block';
             // Send an AJAX request to update the API key
             fetch(`/setapikey?apikey=${encodeURIComponent(openai_key)}`, {
                 method: 'POST'
             })
                 .then(response => {
                     if (response.ok) {
+
                         oldProjects(openai_key)
                         console.log('API key updated successfully!');
+                        document.querySelector('.preloader').style.display = 'none';
+
                     } else {
                         console.error('Failed to update API key');
                     }
                 })
                 .catch(error => {
+                    document.querySelector('.preloader').style.display = 'none';
+
                     console.error('Error:', error);
                 });
+// Show the preloader
         } else {
             console.error('OpenAI key not provided');
         }
@@ -399,6 +446,8 @@
 
         console.log(event.target, "form fields");
         // Make API call
+        document.querySelector('.preloader').style.display = 'block';
+
         fetch("/setup_openai_key", {
             method: "POST",
             body: formData
@@ -411,6 +460,8 @@
             })
             .then(data => {
                 if (data.success) {
+                    document.querySelector('.preloader').style.display = 'none';
+
                     oldProjects(openai_key)
                     document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = data.file_name;
@@ -423,8 +474,11 @@
                 console.log('File Name:', file_name);
             })
             .catch(error => {
+                document.querySelector('.preloader').style.display = 'none';
+
                 console.error("Error:", error);
             });
+
     });
 
     function oldProjects(openai_key) {
@@ -468,6 +522,8 @@
                 downloadIcon.setAttribute('class', 'download-icon');
                 downloadIcon.setAttribute('width', '30');
                 downloadIcon.setAttribute('height', '30');
+                downloadIcon.style.cursor = 'pointer'; // Set cursor style to pointer
+
                 console.log(downloadIcon);
 
                 // Create a paragraph element for the project name

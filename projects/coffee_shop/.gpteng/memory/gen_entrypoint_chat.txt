@@ -1,8 +1,9 @@
-```bash
-# Since the requirements.txt is empty, there are no external dependencies to install.
-# However, if there were dependencies, you would typically run:
-# pip install -r requirements.txt
+```sh
+# a) Install dependencies
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# Run the main.py script to start the coffee shop application
+# b) Run all necessary parts of the codebase
 python main.py
 ```
