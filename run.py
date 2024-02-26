@@ -149,7 +149,11 @@ def setup_openai_key():
             with app.test_client() as client:
                  # Send a POST request with the API key as a query parameter
                 response = client.post('/setapikey?apikey=' + openai_key)
-
+                # if there is no .env file, try to load from the current working directory
+                # load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
+                # openai.api_key = os.getenv("OPENAI_API_KEY")
+                os.environ['OPENAI_API_KEY'] = openai_key
+                openai.api_key = os.environ['OPENAI_API_KEY']
                 # Process the response
                 print(response.data.decode('utf-8'))
                 if response.status_code == 200:
@@ -203,8 +207,7 @@ def setup_openai_key():
                     inserted_id = new_user.save_to_mongo()
 
                     if inserted_id:
-                        print(f"Project zip file saved to MongoDB with ID: {
-                            inserted_id}")
+                        print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
                     else:
                         print("Failed to save project zip file to MongoDB.")
 
@@ -304,8 +307,23 @@ def set_api_key():
     """
     Update the OPENAI_API_KEY in the .env file with the provided API key.
     """
-    api_key = request.args.get(
-        'apikey')  # Use form data instead of URL query parameters
+    api_key = request.args.get('apikey')  # Use form data instead of URL query parameters
+    if api_key:
+        os.environ['OPENAI_API_KEY'] = api_key
+        openai.api_key = os.environ['OPENAI_API_KEY']
+
+        return 'API key updated successfully!'
+    else:
+        return 'API key not provided!'
+
+
+
+@app.route('/setapikeyold', methods=['POST'])
+def set_api_keyold():
+    """
+    Update the OPENAI_API_KEY in the .env file with the provided API key.
+    """
+    api_key = request.args.get('apikey')  # Use form data instead of URL query parameters
     if api_key:
         env_path = os.path.join(os.getcwd(), ".env")  # Path to the .env file
 
@@ -332,14 +350,13 @@ def set_api_key():
             with open(env_path, 'w') as env_file:
                 env_file.write(f"OPENAI_API_KEY={api_key}\n")
 
-        # if there is no .env file, try to load from the current working directory
-        load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
+        # Reload environment variables after updating .env file
+        load_dotenv(dotenv_path=env_path)
         openai.api_key = os.getenv("OPENAI_API_KEY")
 
         return 'API key updated successfully!'
     else:
         return 'API key not provided!'
-
 
 
 def set_key(file_path, key, value):

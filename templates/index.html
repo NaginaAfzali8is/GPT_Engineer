@@ -365,10 +365,9 @@ document.querySelector('.preloader').style.display = 'block';
             })
                 .then(response => {
                     if (response.ok) {
-
+                        document.querySelector('.preloader').style.display = 'none';
                         oldProjects(openai_key)
                         console.log('API key updated successfully!');
-                        document.querySelector('.preloader').style.display = 'none';
 
                     } else {
                         console.error('Failed to update API key');
