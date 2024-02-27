@@ -297,34 +297,28 @@ def success():
 @app.route('/download')
 def download():
     # Retrieve project name and API key from request args
-    project_name = request.args.get('filename')
+    requested_filename = request.args.get('filename')
     api_key = request.args.get('apikey')
 
     # Remove the ".zip" extension if it exists
-    if project_name.endswith('.zip'):
-        project_name = project_name[:-4]  # Remove the last 4 characters (".zip")
+    if requested_filename.endswith('.zip'):
+        project_name = requested_filename[:-4]  # Remove the last 4 characters (".zip")
+    else:
+        project_name = requested_filename
 
     # Get the user from MongoDB based on the project name and API key
     user = User.get_by_project_name_and_api_key(project_name, api_key)
 
     if user and 'project_array' in user and len(user['project_array']) > 0:
-        # Retrieve the zip file binary from the first project in the project_array
-        zip_file_binary = user['project_array'][0]['project_zip_binary']
-
-        # Create a zip file in memory
-        zip_buffer = io.BytesIO(zip_file_binary)
-        zip_filename = f'{project_name}.zip'
-
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Write the zip file content directly from the binary data
-            zipf.writestr(zip_filename, zip_file_binary)
-
-        zip_buffer.seek(0)
+        # Retrieve project details
+        project_name = user['project_array'][0]['project_name']
+        project_zip_binary = user['project_array'][0]['project_zip_binary']
 
         # Set the Content-Type header for ZIP files
-        return send_file(zip_buffer, as_attachment=True, download_name=zip_filename, mimetype='application/zip')
+        return send_file(io.BytesIO(project_zip_binary), as_attachment=True, download_name=f"{project_name}.zip", mimetype='application/zip')
     else:
         return 'Project not found!'
+    
 
 @app.route('/setapikey', methods=['POST'])
 def set_api_key():
@@ -420,5 +414,4 @@ def get_user_by_openai_key():
 if __name__ == "__main__":
     # Check if the OPENAI_API_KEY is set, if not redirect to the setup page
     print("OpenAI API key is not set. Please set it up.")
-    print("Starting the web interface for setup...")
     app.run(debug=True, port=5000)
