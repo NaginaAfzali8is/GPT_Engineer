@@ -1,91 +1,66 @@
 To implement a Snake game in Python, we will need the following core classes and functions:
 
-- `Game`: The main class to control the game logic.
-- `Snake`: To represent the snake and its behavior.
-- `Food`: To represent the food object on the game board.
-- `GameBoard`: To represent the game area where the snake moves.
-- `Point`: To represent the coordinates on the game board.
+- `Game`: The main class to control the game loop and state.
+- `Snake`: To represent the snake and handle its movement.
+- `Food`: To represent the food that the snake can eat.
+- `GameBoard`: To represent the game board and check for collisions.
+- `Point`: A utility class to represent x, y coordinates on the board.
 - `Direction`: An enumeration to represent the direction of the snake's movement.
 - `main`: The entry point function to start the game.
 
-We will also need a file to handle the rendering of the game, which could be a terminal-based or graphical interface. For simplicity, we will use a terminal-based interface using the `curses` library.
+We will also need a requirements.txt file to specify the dependencies for the project.
 
-Let's start by creating the entry point file and then proceed to the other files that are imported by that file.
+Let's start by creating the entry point file and then proceed to the other files.
 
 entrypoint.py
 ```python
-import curses
 from game import Game
 
-def main(stdscr):
-    # Set up curses environment
-    curses.curs_set(0)  # Hide the cursor
-    stdscr.nodelay(1)  # Make getch() non-blocking
-    stdscr.timeout(100)  # Refresh the screen every 100ms
-
-    # Create a game instance and start the game loop
-    game = Game(stdscr)
-    game.start()
+def main():
+    game = Game()
+    game.run()
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    main()
 ```
 
 game.py
 ```python
-import curses
 from snake import Snake
 from food import Food
 from gameboard import GameBoard
-from direction import Direction
+import curses
 
 class Game:
-    def __init__(self, stdscr):
-        self.stdscr = stdscr
+    def __init__(self):
         self.board = GameBoard(20, 20)
         self.snake = Snake(self.board)
         self.food = Food(self.board)
         self.score = 0
 
-    def start(self):
+    def run(self):
+        curses.wrapper(self.main_loop)
+
+    def main_loop(self, stdscr):
+        curses.curs_set(0)  # Hide the cursor
+        stdscr.nodelay(1)  # Make getch non-blocking
+        stdscr.timeout(100)  # Refresh screen every 100ms
+
         while True:
-            self.render()
-            self.update()
-            if self.snake.has_collided() or self.snake.has_eaten_itself():
-                break
-            if self.snake.has_eaten_food(self.food.position):
-                self.score += 1
-                self.food.respawn()
-
-    def render(self):
-        self.stdscr.clear()
-        self.board.render(self.stdscr)
-        self.snake.render(self.stdscr)
-        self.food.render(self.stdscr)
-        self.stdscr.addstr(0, 0, f"Score: {self.score}")
-        self.stdscr.refresh()
-
-    def update(self):
-        key = self.stdscr.getch()
-        direction = None
-        if key == curses.KEY_UP:
-            direction = Direction.UP
-        elif key == curses.KEY_DOWN:
-            direction = Direction.DOWN
-        elif key == curses.KEY_LEFT:
-            direction = Direction.LEFT
-        elif key == curses.KEY_RIGHT:
-            direction = Direction.RIGHT
-
-        if direction:
-            self.snake.change_direction(direction)
-        self.snake.move()
+            self.board.draw(stdscr, self.snake, self.food)
+            key = stdscr.getch()
+            self.snake.handle_key(key)
+            if not self.snake.move(self.food):
+                break  # Game over if the snake can't move
+            self.score = len(self.snake.body) - 1
+            stdscr.addstr(0, 0, f'Score: {self.score}')
 ```
 
 snake.py
 ```python
 from point import Point
 from direction import Direction
+import curses
 
 class Snake:
     def __init__(self, board):
@@ -94,78 +69,91 @@ class Snake:
         self.grow_to = 0
         self.board = board
 
-    def move(self):
+    def move(self, food):
         head = self.body[0]
-        new_head = Point(head.x + self.direction.value[0], head.y + self.direction.value[1])
+        new_head = head.move(self.direction)
+
+        if new_head in self.body or not self.board.is_inside(new_head):
+            return False  # Collision
+
         self.body.insert(0, new_head)
-        if self.grow_to > 0:
+
+        if new_head == food.position:
+            food.respawn(self)
+            self.grow_to += 3
+        elif self.grow_to > 0:
             self.grow_to -= 1
         else:
             self.body.pop()
 
-    def change_direction(self, new_direction):
-        if (new_direction.value[0] * -1, new_direction.value[1] * -1) != self.direction.value:
-            self.direction = new_direction
+        return True
 
-    def has_collided(self):
-        head = self.body[0]
-        return head.x < 0 or head.x >= self.board.width or head.y < 0 or head.y >= self.board.height
-
-    def has_eaten_itself(self):
-        head = self.body[0]
-        return head in self.body[1:]
-
-    def has_eaten_food(self, food_position):
-        if self.body[0] == food_position:
-            self.grow_to += 1
-            return True
-        return False
-
-    def render(self, stdscr):
-        for point in self.body:
-            stdscr.addch(point.y, point.x, '#')
-
+    def handle_key(self, key):
+        if key == curses.KEY_UP and self.direction != Direction.DOWN:
+            self.direction = Direction.UP
+        elif key == curses.KEY_DOWN and self.direction != Direction.UP:
+            self.direction = Direction.DOWN
+        elif key == curses.KEY_LEFT and self.direction != Direction.RIGHT:
+            self.direction = Direction.LEFT
+        elif key == curses.KEY_RIGHT and self.direction != Direction.LEFT:
+            self.direction = Direction.RIGHT
 ```
 
 food.py
 ```python
-import random
 from point import Point
+import random
 
 class Food:
     def __init__(self, board):
         self.board = board
         self.position = Point(random.randint(0, board.width - 1), random.randint(0, board.height - 1))
 
-    def respawn(self):
-        self.position = Point(random.randint(0, self.board.width - 1), random.randint(0, self.board.height - 1))
-
-    def render(self, stdscr):
-        stdscr.addch(self.position.y, self.position.x, '*')
+    def respawn(self, snake):
+        while True:
+            self.position = Point(random.randint(0, self.board.width - 1), random.randint(0, self.board.height - 1))
+            if self.position not in snake.body:
+                break
 ```
 
 gameboard.py
 ```python
+import curses
+
 class GameBoard:
     def __init__(self, width, height):
         self.width = width
         self.height = height
 
-    def render(self, stdscr):
-        for y in range(self.height):
-            for x in range(self.width):
-                stdscr.addch(y, x, ' ')
+    def is_inside(self, point):
+        return 0 <= point.x < self.width and 0 <= point.y < self.height
 
+    def draw(self, stdscr, snake, food):
+        stdscr.clear()
+        for point in snake.body:
+            stdscr.addstr(point.y, point.x * 2, '[]')
+        stdscr.addstr(food.position.y, food.position.x * 2, '##')
+        stdscr.refresh()
 ```
 
 point.py
 ```python
 from dataclasses import dataclass
 
-@dataclass(eq=True, frozen=True)
+@dataclass
 class Point:
     x: int
     y: int
+
+    def move(self, direction):
+        if direction == Direction.UP:
+            return Point(self.x, self.y - 1)
+        elif direction == Direction.DOWN:
+            return Point(self.x, self.y + 1)
+        elif direction == Direction.LEFT:
+            return Point(self.x - 1, self.y)
+        elif direction == Direction.RIGHT:
+            return Point(self.x + 1, self.y)
 ```
 
 direction.py
@@ -173,15 +161,17 @@ direction.py
 from enum import Enum
 
 class Direction(Enum):
-    UP = (0, -1)
-    DOWN = (0, 1)
-    LEFT = (-1, 0)
-    RIGHT = (1, 0)
+    UP = 1
+    DOWN = 2
+    LEFT = 3
+    RIGHT = 4
 ```
 
 requirements.txt
 ```
 curses
 ```
+
+Please note that the `curses` module is part of the Python standard library and does not need to be installed via `pip`. However, if you are using Windows, you might need to install `windows-curses` to enable support for the `curses` module.
 
 This concludes a fully working implementation.

@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 import openai
 import json
-
+import sys
+from io import StringIO
 # Import necessary modules and classes from your CLI application
 from gpt_engineer.applications.cli.cli_agent import CliAgent
 from gpt_engineer.applications.cli.file_selector import FileSelector
@@ -79,6 +80,7 @@ class User:
             result = users_collection.insert_one(user_data)
             return result.inserted_id
 
+
     @staticmethod
     def exists(project_name, openai_key):
         users_collection = mongo.db.users
@@ -98,11 +100,17 @@ class User:
         return user_data
 
     @staticmethod
-    def get_by_project_name(project_name):
+    def get_by_project_name_and_api_key(project_name, api_key):
         users_collection = mongo.db.users
         user = users_collection.find_one(
-            {'project_array.project_name': project_name})
-        return user
+            {'project_array': {'$elemMatch': {'project_name': project_name}}, 'openai_key': api_key},
+            {'project_array.$': 1}  # Projection to retrieve only the matching element of project_array
+        )
+
+        if user and 'project_array' in user:
+            return user
+        else:
+            return None
 
 # def load_env_if_needed():
 #     """
@@ -129,7 +137,8 @@ def index():
 def setup_openai_key():
     if request.method == "POST":
         openai_key = request.form["openai_key"]
-        projectName = request.form["project_type"]
+        projectname = request.form["project_type"]
+        projectName = projectname.strip().replace(' ', '_')
         projectDesc = request.form["project_description"]
 # Check if project name and key combination already exists
         if User.exists(projectName, openai_key):
@@ -146,98 +155,112 @@ def setup_openai_key():
             session['project_name'] = projectName
             session['openai_key'] = openai_key  # Store the key in the session
             # Make a request to set the API key
+            
             with app.test_client() as client:
-                 # Send a POST request with the API key as a query parameter
-                response = client.post('/setapikey?apikey=' + openai_key)
-                # if there is no .env file, try to load from the current working directory
-                # load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
-                # openai.api_key = os.getenv("OPENAI_API_KEY")
-                os.environ['OPENAI_API_KEY'] = openai_key
-                openai.api_key = os.environ['OPENAI_API_KEY']
-                # Process the response
-                print(response.data.decode('utf-8'))
-                if response.status_code == 200:
-                    
-                    # Replace spaces with underscores and strip leading/trailing spaces
-                    project_path = f"projects/{projectName.strip().replace(' ', '_')}"
+                try:
+                    # Send a POST request with the API key as a query parameter
+                    response = client.post('/setapikey?apikey=' + openai_key)
+                    # if there is no .env file, try to load from the current working directory
+                    # load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
+                    # openai.api_key = os.getenv("OPENAI_API_KEY")
+                    os.environ['OPENAI_API_KEY'] = openai_key
+                    openai.api_key = os.environ['OPENAI_API_KEY']
+                    # Process the response
+                    print(response.data.decode('utf-8'))
+                    if response.status_code == 200:
+                        
+                        # Replace spaces with underscores and strip leading/trailing spaces
+                        project_path = f"projects/{projectName}"
 
-                    # Create the project directory if it doesn't exist
-                    if not os.path.exists(project_path):
-                        os.makedirs(project_path)
+                        # Create the project directory if it doesn't exist
+                        if not os.path.exists(project_path):
+                            os.makedirs(project_path)
 
-                    # Set up the AI and project configuration
-                    ai = AI(
-                        model_name="gpt-4-1106-preview",  # Set your desired model
-                        temperature=0.1,
-                        azure_endpoint="",  # Set Azure endpoint if applicable
-                    )
+                        # Set up the AI and project configuration
+                        ai = AI(
+                            model_name="gpt-4-1106-preview",  # Set your desired model
+                            temperature=0.1,
+                            azure_endpoint="",  # Set Azure endpoint if applicable
+                        )
 
-                    prompt = projectDesc  # Use project description as prompt
+                        prompt = projectDesc  # Use project description as prompt
 
-                    # Configure functions and paths
-                    code_gen_fn = gen_code
-                    execution_fn = execute_entrypoint
-                    improve_fn = improve
+                        # Configure functions and paths
+                        code_gen_fn = gen_code
+                        execution_fn = execute_entrypoint
+                        improve_fn = improve
 
-                    memory = DiskMemory(memory_path(project_path))
-                    execution_env = DiskExecutionEnv()
-                    agent = CliAgent.with_default_config(
-                        memory,
-                        execution_env,
-                        ai=ai,
-                        code_gen_fn=code_gen_fn,
-                        improve_fn=improve_fn,
-                    )
+                        memory = DiskMemory(memory_path(project_path))
+                        execution_env = DiskExecutionEnv()
+                        agent = CliAgent.with_default_config(
+                            memory,
+                            execution_env,
+                            ai=ai,
+                            code_gen_fn=code_gen_fn,
+                            improve_fn=improve_fn,
+                        )
 
-                    store = FileStore(project_path)
+                        store = FileStore(project_path)
+                        sys.stdin = StringIO('n\n')
+                        # Save the original standard input
+                        original_stdin = sys.stdin
+                        # Generate or improve project
+                        files_dict = agent.init(prompt)
+                        
 
-                    # Generate or improve project
-                    files_dict = agent.init(prompt)
+                        # Restore the original standard input
+                        sys.stdin = original_stdin
+                        # Create a zip file in memory
+                        zip_buffer = io.BytesIO()
+                        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                            for filename, content in files_dict.items():
+                                zip_file.writestr(filename, content)
+                        api_cost = ai.token_usage_log.usage_cost()
 
-                    # Create a zip file in memory
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                        for filename, content in files_dict.items():
-                            zip_file.writestr(filename, content)
-                    api_cost = ai.token_usage_log.usage_cost()
+                        # Save project zip file to MongoDB
+                        zip_file_binary = zip_buffer.getvalue()
+                        new_user = User(openai_key, projectName, api_cost, zip_file_binary)
+                        inserted_id = new_user.save_to_mongo()
 
-                    # Save project zip file to MongoDB
-                    zip_file_binary = zip_buffer.getvalue()
-                    new_user = User(openai_key, projectName, api_cost, zip_file_binary)
-                    inserted_id = new_user.save_to_mongo()
+                        if inserted_id:
+                            print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
+                        else:
+                            print("Failed to save project zip file to MongoDB.")
 
-                    if inserted_id:
-                        print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
+                        zip_buffer.close()
+
+                        # Create a zip file of the project directory
+                        # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
+                        # for root, dirs, files in os.walk(project_path):
+                        #     for file in files:
+                        #         zipf.write(os.path.join(root, file), os.path.relpath(
+                        #             os.path.join(root, file), os.path.join(project_path, '..')))
+                        # zipf.close()
+
+                        print('OpenAI API key set successfully!')
+
+                # Render the success template with necessary data
+                        # return render_template('index.html', success=True,apicost='$0.002345', file_name=f'{projectName}.zip', download_url=url_for('download', file_name=f'{projectName}.zip'))
+                        file_name = f'{projectName}.zip'
+                        api_cost = api_cost
+
+                        # Return response as JSON
+                        response_data = {
+                            'success': True,
+                            'file_name': file_name,
+                            'api_cost': api_cost
+                        }
+                        return jsonify(response_data)
+                        print("OpenAI API key is set up.")
                     else:
-                        print("Failed to save project zip file to MongoDB.")
-
-                    zip_buffer.close()
-
-                    # Create a zip file of the project directory
-                    # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
-                    # for root, dirs, files in os.walk(project_path):
-                    #     for file in files:
-                    #         zipf.write(os.path.join(root, file), os.path.relpath(
-                    #             os.path.join(root, file), os.path.join(project_path, '..')))
-                    # zipf.close()
-
-                    print('OpenAI API key set successfully!')
-
-            # Render the success template with necessary data
-                    # return render_template('index.html', success=True,apicost='$0.002345', file_name=f'{projectName}.zip', download_url=url_for('download', file_name=f'{projectName}.zip'))
-                    file_name = f'{projectName}.zip'
-                    api_cost = api_cost
-
-                    # Return response as JSON
+                        print("Failed to set OpenAI API key.")
+                except Exception as e:
+                    error_message = f"An error occurred: {str(e)}"
                     response_data = {
-                        'success': True,
-                        'file_name': file_name,
-                        'api_cost': api_cost
+                        'success': False,
+                        'error': error_message
                     }
-                    return jsonify(response_data)
-                    print("OpenAI API key is set up.")
-                else:
-                    print("Failed to set OpenAI API key.")
+                    return jsonify(response_data), 500
 
 
     return render_template("index.html")
@@ -273,14 +296,16 @@ def success():
 
 @app.route('/download')
 def download():
-    # Retrieve project name from request args
+    # Retrieve project name and API key from request args
     project_name = request.args.get('filename')
+    api_key = request.args.get('apikey')
 
     # Remove the ".zip" extension if it exists
     if project_name.endswith('.zip'):
         project_name = project_name[:-4]  # Remove the last 4 characters (".zip")
-    # Get the user from MongoDB based on the project name
-    user = User.get_by_project_name(project_name)
+
+    # Get the user from MongoDB based on the project name and API key
+    user = User.get_by_project_name_and_api_key(project_name, api_key)
 
     if user and 'project_array' in user and len(user['project_array']) > 0:
         # Retrieve the zip file binary from the first project in the project_array
@@ -296,11 +321,10 @@ def download():
 
         zip_buffer.seek(0)
 
-# Set the Content-Type header for ZIP files
+        # Set the Content-Type header for ZIP files
         return send_file(zip_buffer, as_attachment=True, download_name=zip_filename, mimetype='application/zip')
     else:
         return 'Project not found!'
-
 
 @app.route('/setapikey', methods=['POST'])
 def set_api_key():

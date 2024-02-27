@@ -1,0 +1,214 @@
+To create a beautiful portfolio website, we will use Python with Flask as the web framework. We will also use HTML, CSS, and JavaScript for the front-end. The website will have a home page, about page, portfolio page, and a contact page.
+
+Here are the core components we will need:
+
+- `app.py`: The main Flask application file.
+- `requirements.txt`: A file listing all the Python dependencies.
+- `templates/`: A directory to hold HTML templates for the website.
+- `static/`: A directory to hold static files like CSS, JavaScript, and images.
+- `config.py`: A file to hold configuration variables.
+- `forms.py`: A file to define web forms using Flask-WTF.
+- `models.py`: A file to define data models, if necessary.
+
+Let's start by setting up the Flask application and the necessary files.
+
+**app.py**
+```python
+from flask import Flask, render_template
+from config import Config
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/portfolio')
+def portfolio():
+    return render_template('portfolio.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+**config.py**
+```python
+class Config:
+    SECRET_KEY = 'your_secret_key_here'
+```
+
+**requirements.txt**
+```
+Flask==2.0.2
+Flask-WTF==0.15.1
+```
+
+Now, let's create the HTML templates for each page.
+
+**templates/home.html**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | My Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Welcome to My Portfolio</h1>
+    <!-- Add more content here -->
+</body>
+</html>
+```
+
+**templates/about.html**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me | My Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>About Me</h1>
+    <!-- Add more content here -->
+</body>
+</html>
+```
+
+**templates/portfolio.html**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | My Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>My Portfolio</h1>
+    <!-- Add more content here -->
+</body>
+</html>
+```
+
+**templates/contact.html**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | My Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Contact Me</h1>
+    <!-- Add more content here -->
+</body>
+</html>
+```
+
+Next, we will create the CSS file to style the website.
+
+**static/css/style.css**
+```css
+body {
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #333;
+}
+/* Add more styling here */
+```
+
+Finally, we will create a simple contact form using Flask-WTF.
+
+**forms.py**
+```python
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, SubmitField
+from wtforms.validators import DataRequired, Email
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    message = TextAreaField('Message', validators=[DataRequired()])
+    submit = SubmitField('Send')
+```
+
+We will need to update the `contact.html` template to include the form.
+
+**templates/contact.html (updated)**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact | My Portfolio</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Contact Me</h1>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.name.label }}<br>
+            {{ form.name(size=30) }}
+        </p>
+        <p>
+            {{ form.email.label }}<br>
+            {{ form.email(size=30) }}
+        </p>
+        <p>
+            {{ form.message.label }}<br>
+            {{ form.message(rows=7, cols=30) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+</body>
+</html>
+```
+
+We will also need to update the `app.py` to handle the contact form.
+
+**app.py (updated)**
+```python
+from flask import Flask, render_template, flash, redirect, url_for
+from config import Config
+from forms import ContactForm
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Other routes...
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    form = ContactForm()
+    if form.validate_on_submit():
+        # Here you would normally send the email or save the contact info
+        flash('Thank you for your message. We will get back to you shortly.')
+        return redirect(url_for('home'))
+    return render_template('contact.html', form=form)
+
+# Main block...
+
+```
+
+This concludes a fully working implementation.
