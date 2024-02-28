@@ -1,0 +1,136 @@
+To create a backend for a "beautiful message" web app using Node.js, we'll need to set up a simple REST API that can handle requests to create and retrieve messages. We'll use Express.js as the web framework for building the API endpoints, and for simplicity, we'll store the messages in-memory without a database.
+
+Here's the architecture we'll implement:
+
+1. `index.js`: The entry point of the application that sets up the server.
+2. `app.js`: Sets up the Express application and imports the routes.
+3. `routes/messageRoutes.js`: Defines the routes for handling message-related requests.
+4. `controllers/messageController.js`: Contains the logic for handling requests (create and get messages).
+5. `models/messageModel.js`: Defines the Message data structure.
+6. `package.json`: Defines the project dependencies and scripts.
+7. `.env`: An environment file to store configuration variables (not checked into version control).
+
+Let's start by creating the `package.json` file to define the project dependencies.
+
+package.json
+```json
+{
+  "name": "beautiful-message-webapp",
+  "version": "1.0.0",
+  "description": "Backend for a beautiful message web app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  },
+  "author": "",
+  "license": "ISC"
+}
+```
+
+Now, let's create the entry point of the application.
+
+index.js
+```javascript
+const app = require('./app');
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+```
+
+Next, we'll set up the Express application.
+
+app.js
+```javascript
+const express = require('express');
+const messageRoutes = require('./routes/messageRoutes');
+
+const app = express();
+
+app.use(express.json());
+
+app.use('/api/messages', messageRoutes);
+
+module.exports = app;
+```
+
+Now, let's define the routes for handling message-related requests.
+
+routes/messageRoutes.js
+```javascript
+const express = require('express');
+const messageController = require('../controllers/messageController');
+
+const router = express.Router();
+
+router.post('/', messageController.createMessage);
+router.get('/', messageController.getMessages);
+
+module.exports = router;
+```
+
+Next, we'll create the controller that contains the logic for handling requests.
+
+controllers/messageController.js
+```javascript
+const Message = require('../models/messageModel');
+
+const messages = [];
+
+exports.createMessage = (req, res) => {
+  const { content, author } = req.body;
+  const newMessage = new Message(content, author);
+  messages.push(newMessage);
+  res.status(201).json(newMessage);
+};
+
+exports.getMessages = (req, res) => {
+  res.status(200).json(messages);
+};
+```
+
+Now, let's define the Message data structure.
+
+models/messageModel.js
+```javascript
+class Message {
+  constructor(content, author) {
+    this.id = Math.random().toString(36).substr(2, 9);
+    this.content = content;
+    this.author = author;
+    this.createdAt = new Date();
+  }
+}
+
+module.exports = Message;
+```
+
+Finally, we need to create a `.env` file to store environment variables. However, this file should not be checked into version control, so we'll just describe its contents here:
+
+.env
+```
+# Environment configuration
+PORT=3000
+```
+
+Make sure to add `.env` to your `.gitignore` file to prevent it from being committed to your version control system.
+
+.gitignore
+```
+node_modules/
+.env
+```
+
+To run the application, you will need to install the dependencies by running `npm install` and then start the server using `npm start` or `npm run dev` for development mode with nodemon.
+
+This concludes a fully working implementation.
