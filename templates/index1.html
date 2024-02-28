@@ -213,27 +213,54 @@
             margin-right: 5px;
         }
 
-        @media only screen and (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
+/* ... your existing styles ... */
 
-            .sidebar,
-            .main {
-                width: 100%;
-                padding: 20px;
-            }
+/* Media queries for mobile responsiveness */
+@media only screen and (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
 
-            .fixed-form {
-                left: 0;
-                width: 100%;
-            }
+    .sidebar,
+    .main {
+        width: 100%;
+        padding: 20px;
+    }
 
-            .content {
-                margin-bottom: 120px;
-                /* Increase for smaller screens if necessary */
-            }
-        }
+    .fixed-form {
+        left: 0;
+        width: 100%;
+    }
+
+    .content {
+        margin-bottom: 120px; /* Increase for smaller screens if necessary */
+    }
+
+    /* Styling for open sidebar on mobile */
+    .sidebar {
+        position: fixed;
+        width: 80%; /* Adjust the width as needed */
+        left: -100%; /* Hide initially off-screen */
+        transition: left 0.3s ease;
+        z-index: 1;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    .toggle-sidebar {
+        display: block;
+        background-color: #012152;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+}
     
     /* Preloader styles */
 .preloader {
@@ -264,12 +291,53 @@
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+/* CSS to hide toggle button on screens other than mobile */
+@media only screen and (min-width: 769px) {
+    .toggle-sidebar {
+        display: none;
+    }
+}
+/* CSS for the close button */
+.close-sidebar-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    outline: none;
+    display: none; /* Initially hidden */
+}
+
+.close-sidebar-btn:hover {
+    color: #ccc;
+}
+
+/* Media query for mobile screens */
+@media only screen and (max-width: 768px) {
+    .close-sidebar-btn {
+        display: block; /* Show the close button on mobile */
+    }
+}
+
 </style>
 </head>
 
 <body>
     <div class="container">
+         <!-- Button to toggle sidebar -->
+         
+         <button class="toggle-sidebar" onclick="toggleSidebar()">&#9776; Menu</button>
+
+         <!-- <button class="open-sidebar" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button> -->
         <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="close-sidebar-btn" onclick="closeSidebar()">&#10006;</button>
+            </div>
             <div class="new-chat">
                 <h2><button id="removekey" onclick="removekey()"><i class="fas fa-sign-out-alt"></i> Exit Api</button>
                 </h2>
@@ -288,7 +356,7 @@
                     <a href="https://i8is.com">
                         <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
                             alt="Your Company Logo">
-                        <h1>GPT Engineer By I8is</h1>
+                        <h1>GPT Engineer By I8IS</h1>
                     </a>
                 </div>
             </div>
@@ -550,7 +618,27 @@ document.querySelector('.preloader').style.display = 'block';
     }
 
 
+    function toggleSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('open');
+    }
 
+    // Close sidebar when clicking outside of it
+    document.body.addEventListener('click', function(event) {
+        var sidebar = document.querySelector('.sidebar');
+        var toggleButton = document.querySelector('.toggle-sidebar');
+
+        // Check if the clicked element is not part of the sidebar or the toggle button
+        if (!sidebar.contains(event.target) && event.target !== toggleButton) {
+            sidebar.classList.remove('open');
+        }
+    });
+
+ // Function to close the sidebar
+ function closeSidebar() {
+        var sidebar = document.querySelector('.sidebar');
+        sidebar.classList.remove('open');
+    }
 
 
 

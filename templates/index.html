@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
         integrity="sha512-VzEu7SdDjEuwpX6jf6CB+Rj7pfRn2wkgmF2wp8ZBGWGshGj6Zw8WIMC7m5hJjQzrKZDyCgMUNB5LMdsV1Z1upQ=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- SweetAlert CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
     <!-- Add Font Awesome CDN -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -21,6 +24,28 @@
             margin: 0;
             padding: 0;
         }
+
+        .main {
+            position: relative;
+        }
+
+        .content {
+            margin-bottom: 200px;
+            /* Adjust this value based on your content's height and desired separation */
+        }
+
+        .fixed-form {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            /* Set a background color for better visibility */
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            /* Optional: Add a shadow for separation */
+        }
+
 
         .container {
             display: flex;
@@ -213,125 +238,158 @@
             margin-right: 5px;
         }
 
-/* ... your existing styles ... */
+        /* ... your existing styles ... */
 
-/* Media queries for mobile responsiveness */
-@media only screen and (max-width: 768px) {
-    .container {
-        flex-direction: column;
-    }
+        /* Media queries for mobile responsiveness */
+        @media only screen and (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
 
-    .sidebar,
-    .main {
+            .sidebar,
+            /* .main {
         width: 100%;
         padding: 20px;
-    }
+    } */
 
-    .fixed-form {
-        left: 0;
-        width: 100%;
-    }
+            .fixed-form {
+                left: 0;
+                width: 100%;
+                position: absolute;
+                top: 30%;
+            }
 
-    .content {
-        margin-bottom: 120px; /* Increase for smaller screens if necessary */
-    }
+            .content {
+                margin-bottom: 120px;
+                /* Increase for smaller screens if necessary */
+            }
 
-    /* Styling for open sidebar on mobile */
-    .sidebar {
-        position: fixed;
-        width: 80%; /* Adjust the width as needed */
-        left: -100%; /* Hide initially off-screen */
-        transition: left 0.3s ease;
-        z-index: 1;
-    }
+            /* Styling for open sidebar on mobile */
+            .sidebar {
+                position: fixed;
+                width: 80%;
+                /* Adjust the width as needed */
+                left: -100%;
+                /* Hide initially off-screen */
+                transition: left 0.3s ease;
+                z-index: 1;
+            }
 
-    .sidebar.open {
-        left: 0;
-    }
+            .sidebar.open {
+                left: 0;
+            }
 
-    .toggle-sidebar {
-        display: block;
-        background-color: #012152;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-bottom: 10px;
-    }
-}
-    
-    /* Preloader styles */
-.preloader {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
-    z-index: 9999; /* Ensure the preloader appears on top of other content */
-    display: none; /* Initially hidden */
-}
+            .toggle-sidebar {
+                display: block;
+                background-color: #012152;
+                color: white;
+                padding: 12px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+        }
 
-.spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    border: 4px solid #b2b1b1; /* Light grey border */
-    border-top: 4px solid #3498db; /* Blue border on top */
-    border-radius: 50%; /* Circle shape */
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite; /* Rotate animation */
-}
+        /* Preloader styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            /* Semi-transparent white background */
+            z-index: 9999;
+            /* Ensure the preloader appears on top of other content */
+            display: none;
+            /* Initially hidden */
+        }
 
-/* Rotate animation */
-@keyframes spin {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-/* CSS to hide toggle button on screens other than mobile */
-@media only screen and (min-width: 769px) {
-    .toggle-sidebar {
-        display: none;
-    }
-}
-/* CSS for the close button */
-.close-sidebar-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: white;
-    cursor: pointer;
-    outline: none;
-    display: none; /* Initially hidden */
-}
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 4px solid #b2b1b1;
+            /* Light grey border */
+            border-top: 4px solid #3498db;
+            /* Blue border on top */
+            border-radius: 50%;
+            /* Circle shape */
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            /* Rotate animation */
+        }
 
-.close-sidebar-btn:hover {
-    color: #ccc;
-}
+        /* Rotate animation */
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
 
-/* Media query for mobile screens */
-@media only screen and (max-width: 768px) {
-    .close-sidebar-btn {
-        display: block; /* Show the close button on mobile */
-    }
-}
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
 
-</style>
+        /* CSS to hide toggle button on screens other than mobile */
+        @media only screen and (min-width: 769px) {
+            .toggle-sidebar {
+                display: none;
+            }
+        }
+
+        /* CSS for the close button */
+        .close-sidebar-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            outline: none;
+            display: none;
+            /* Initially hidden */
+        }
+
+        .close-sidebar-btn:hover {
+            color: #ccc;
+        }
+
+        /* Media query for mobile screens */
+        @media only screen and (max-width: 768px) {
+            .close-sidebar-btn {
+                display: block;
+                /* Show the close button on mobile */
+            }
+
+            .header {
+                position: absolute;
+                top: 0;
+            }
+
+            .header img {
+                width: 40%;
+            }
+
+            .header h1 {
+                font-size: 7vw;
+            }
+        }
+    </style>
 </head>
 
 <body>
     <div class="container">
-         <!-- Button to toggle sidebar -->
-         
-         <button class="toggle-sidebar" onclick="toggleSidebar()">&#9776; Menu</button>
+        <!-- Button to toggle sidebar -->
 
-         <!-- <button class="open-sidebar" onclick="toggleSidebar()">
+        <button class="toggle-sidebar" onclick="toggleSidebar()">&#9776; Menu</button>
+
+        <!-- <button class="open-sidebar" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
         </button> -->
         <div class="sidebar">
@@ -354,7 +412,7 @@
             <div class="content">
                 <div class="header">
                     <a href="https://i8is.com">
-                        <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
+                        <img width="150px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
                             alt="Your Company Logo">
                         <h1>GPT Engineer By I8IS</h1>
                     </a>
@@ -400,9 +458,9 @@
                 </form>
             </div>
             <!-- Preloader -->
-<div class="preloader">
-    <div class="spinner"></div>
-</div>
+            <div class="preloader">
+                <div class="spinner"></div>
+            </div>
         </div>
     </div>
 </body>
@@ -412,49 +470,89 @@
         localStorage.removeItem('openai_key');
         updateUserContent(null)
         document.getElementById('download-message').style.display = 'none';
+        let createProjectButton = document.getElementById('createpro');
+
+        createProjectButton.disabled = true;
 
         document.getElementById('openkey').style.display = 'block';
         document.getElementById('removekey').style.display = 'none';
-
+onloadf()
     }
     function submitkey() {
         let openai_key = document.getElementById('openai_key').value;
         if (!openai_key) {
-            openai_key = localStorage.getItem('openai_key')
+            Swal.fire({
+                title: 'Error',
+                text: 'Openai key is required.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            // openai_key = localStorage.getItem('openai_key')
         }
         if (openai_key) {
-            localStorage.setItem('openai_key', openai_key);
-            // Show the preloader
-// Show the preloader
-document.querySelector('.preloader').style.display = 'block';
-            // Send an AJAX request to update the API key
-            fetch(`/setapikey?apikey=${encodeURIComponent(openai_key)}`, {
-                method: 'POST'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        document.querySelector('.preloader').style.display = 'none';
-                        oldProjects(openai_key)
-                        console.log('API key updated successfully!');
-
-                    } else {
-                        console.error('Failed to update API key');
-                    }
-                })
-                .catch(error => {
-                    document.querySelector('.preloader').style.display = 'none';
-
-                    console.error('Error:', error);
+            // Additional validation for the OpenAI key
+            if (!isValidOpenAIKey(openai_key)) {
+                // Show an error message when the OpenAI key is not valid
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Invalid OpenAI key.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
                 });
-// Show the preloader
-        } else {
-            console.error('OpenAI key not provided');
+
+                // localStorage.setItem('openai_key', openai_key);
+            } else {
+
+                // Show the preloader
+                // Show the preloader
+                document.querySelector('.preloader').style.display = 'block';
+                // Send an AJAX request to update the API key
+                fetch(`/setapikey?apikey=${encodeURIComponent(openai_key)}`, {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+
+                            localStorage.setItem('openai_key', openai_key);
+
+                            document.querySelector('.preloader').style.display = 'none';
+                            // oldProjects(openai_key)
+                            onloadf()
+                            console.log('API key updated successfully!');
+                            Swal.fire({
+                                title: 'Success',
+                                text: 'API key updated successfully!',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Failed to update API key.',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
+                            console.error('Failed to update API key');
+                        }
+                    })
+                    .catch(error => {
+                        document.querySelector('.preloader').style.display = 'none';
+
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'There was an error processing your request.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    });
+                // Show the preloader
+            }
         }
 
-        localStorage.setItem('openai_key', openai_key);
-
-        onloadf()
+        
     }
+
     function downloadFile(filename) {
         // If there's no filename provided, extract it from the span element
         if (!filename) {
@@ -479,6 +577,7 @@ document.querySelector('.preloader').style.display = 'block';
         onloadf()
 
     });
+
     function onloadf() {
         // Retrieve the openai_key from localStorage
         let openai_key = localStorage.getItem('openai_key');
@@ -487,11 +586,11 @@ document.querySelector('.preloader').style.display = 'block';
         if (openai_key) {
             oldProjects(openai_key)
             // submitkey()
+            document.getElementById('removekey').style.display = 'block';
 
             document.getElementById('openkey').style.display = 'none';
             let createProjectButton = document.getElementById('createpro');
             // Enable the button
-            document.getElementById('removekey').style.display = 'block';
 
             createProjectButton.disabled = false;
         } else {
@@ -499,6 +598,7 @@ document.querySelector('.preloader').style.display = 'block';
             console.log('openai_key not found in localStorage');
         }
     }
+
     let file_name;
     // Construct the download URL using the file name
     let downloadUrl;
@@ -532,7 +632,20 @@ document.querySelector('.preloader').style.display = 'block';
                     oldProjects(openai_key)
                     document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = data.file_name;
-
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Project Created Successfully!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                }
+                else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to Creating Project.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 }
                 // Access file name and API cost directly from JSON data
                 file_name = data.file_name;
@@ -542,7 +655,12 @@ document.querySelector('.preloader').style.display = 'block';
             })
             .catch(error => {
                 document.querySelector('.preloader').style.display = 'none';
-
+                Swal.fire({
+                    title: 'Error',
+                    text: 'There was an error processing your request.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
                 console.error("Error:", error);
             });
 
@@ -624,7 +742,7 @@ document.querySelector('.preloader').style.display = 'block';
     }
 
     // Close sidebar when clicking outside of it
-    document.body.addEventListener('click', function(event) {
+    document.body.addEventListener('click', function (event) {
         var sidebar = document.querySelector('.sidebar');
         var toggleButton = document.querySelector('.toggle-sidebar');
 
@@ -634,13 +752,18 @@ document.querySelector('.preloader').style.display = 'block';
         }
     });
 
- // Function to close the sidebar
- function closeSidebar() {
+    // Function to close the sidebar
+    function closeSidebar() {
         var sidebar = document.querySelector('.sidebar');
         sidebar.classList.remove('open');
     }
 
-
+    // Validation function
+    function isValidOpenAIKey(key) {
+        return typeof key === 'string' &&
+            key.length >= 50 &&
+            key.startsWith('sk-') 
+    }
 
 
 
