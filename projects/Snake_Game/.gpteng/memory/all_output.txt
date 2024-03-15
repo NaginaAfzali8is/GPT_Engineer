@@ -1,24 +1,14 @@
-To create a Snake game in Python, we will need the following core classes and functions:
+To create a functional Snake game in Python, we will need the following core classes and functions:
 
-- `Game`: The main class to encapsulate game logic.
-- `Snake`: A class to represent the snake.
-- `Food`: A class to represent the food.
-- `GameBoard`: A class to represent the game board.
-- `Point`: A class or data structure to represent coordinates on the board.
-- `main`: The entry point function to start the game.
-- `constants`: A module to hold constant values like board size, directions, etc.
-- `utils`: A module for utility functions, if needed.
+1. `Game`: The main class to control game logic and state.
+2. `Snake`: A class to represent the snake.
+3. `Food`: A class to represent the food.
+4. `GameBoard`: A class to represent the game board.
+5. `main`: The entry point function to start the game.
 
-We will use the `pygame` library for creating the game window and handling events. Let's start by setting up the project structure and writing the code for each component.
+We will use the `pygame` library for creating the game window and handling events.
 
-First, we will create a `requirements.txt` file to list our dependencies:
-
-requirements.txt
-```
-pygame==2.1.2
-```
-
-Now, let's start with the entry point of our application:
+Let's start with the entry point file:
 
 main.py
 ```python
@@ -26,23 +16,16 @@ import pygame
 from game import Game
 
 def main():
-    # Initialize pygame
     pygame.init()
-
-    # Create the game instance
     game = Game()
-
-    # Start the game loop
     game.run()
-
-    # Quit pygame
     pygame.quit()
 
 if __name__ == "__main__":
     main()
 ```
 
-Next, we will define the `Game` class:
+Now let's define the `Game` class:
 
 game.py
 ```python
@@ -50,14 +33,13 @@ import pygame
 from snake import Snake
 from food import Food
 from gameboard import GameBoard
-from constants import SCREEN_SIZE, FPS
 
 class Game:
     def __init__(self):
-        self.screen = pygame.display.set_mode(SCREEN_SIZE)
+        self.screen = pygame.display.set_mode((640, 480))
         pygame.display.set_caption('Snake Game')
         self.clock = pygame.time.Clock()
-        self.game_board = GameBoard()
+        self.game_board = GameBoard(640, 480)
         self.snake = Snake(self.game_board)
         self.food = Food(self.game_board)
         self.running = True
@@ -69,9 +51,9 @@ class Game:
                     self.running = False
                 elif event.type == pygame.KEYDOWN:
                     self.snake.change_direction(event.key)
-
+            
             self.snake.move()
-            if self.snake.head == self.food.position:
+            if self.snake.head_position() == self.food.position:
                 self.snake.grow()
                 self.food.spawn()
 
@@ -80,118 +62,105 @@ class Game:
 
             self.game_board.draw(self.screen, self.snake, self.food)
             pygame.display.flip()
-            self.clock.tick(FPS)
+            self.clock.tick(10)
 ```
 
-Now, let's define the `Snake` class:
+Next, we define the `Snake` class:
 
 snake.py
 ```python
 import pygame
-from constants import DIRECTIONS, BLOCK_SIZE
-from point import Point
+from collections import deque
 
 class Snake:
     def __init__(self, game_board):
-        self.body = [Point(game_board.width // 2, game_board.height // 2)]
+        self.positions = deque([(160, 160)])
         self.direction = pygame.K_RIGHT
-        self.growing = False
-
-    @property
-    def head(self):
-        return self.body[0]
+        self.game_board = game_board
 
     def change_direction(self, key):
-        if key in DIRECTIONS and DIRECTIONS[key] != (-DIRECTIONS[self.direction][0], -DIRECTIONS[self.direction][1]):
-            self.direction = key
+        if key == pygame.K_UP and self.direction != pygame.K_DOWN:
+            self.direction = pygame.K_UP
+        elif key == pygame.K_DOWN and self.direction != pygame.K_UP:
+            self.direction = pygame.K_DOWN
+        elif key == pygame.K_LEFT and self.direction != pygame.K_RIGHT:
+            self.direction = pygame.K_LEFT
+        elif key == pygame.K_RIGHT and self.direction != pygame.K_LEFT:
+            self.direction = pygame.K_RIGHT
 
     def move(self):
-        x, y = self.head.x, self.head.y
-        dx, dy = DIRECTIONS[self.direction]
-        new_head = Point(x + dx, y + dy)
-        self.body.insert(0, new_head)
-        if not self.growing:
-            self.body.pop()
-        self.growing = False
+        x, y = self.positions[0]
+        if self.direction == pygame.K_UP:
+            y -= 20
+        elif self.direction == pygame.K_DOWN:
+            y += 20
+        elif self.direction == pygame.K_LEFT:
+            x -= 20
+        elif self.direction == pygame.K_RIGHT:
+            x += 20
+        new_head = (x, y)
+        self.positions.appendleft(new_head)
+        self.positions.pop()
 
     def grow(self):
-        self.growing = True
+        self.positions.append(self.positions[-1])
+
+    def head_position(self):
+        return self.positions[0]
 
     def has_collided(self):
-        return self.head in self.body[1:]
-
-    def draw(self, surface):
-        for block in self.body:
-            rect = pygame.Rect(block.x * BLOCK_SIZE, block.y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-            pygame.draw.rect(surface, (0, 255, 0), rect)
+        head = self.head_position()
+        return head in list(self.positions)[1:] or not self.game_board.is_position_inside(head)
 ```
 
-Next, the `Food` class:
+Now, the `Food` class:
 
 food.py
 ```python
 import pygame
 import random
-from constants import BLOCK_SIZE
-from point import Point
 
 class Food:
     def __init__(self, game_board):
-        self.position = Point(0, 0)
         self.game_board = game_board
+        self.position = (0, 0)
         self.spawn()
 
     def spawn(self):
-        self.position = Point(random.randint(0, self.game_board.width - 1), random.randint(0, self.game_board.height - 1))
-
-    def draw(self, surface):
-        rect = pygame.Rect(self.position.x * BLOCK_SIZE, self.position.y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-        pygame.draw.rect(surface, (255, 0, 0), rect)
+        self.position = (
+            random.randint(0, (self.game_board.width - 20) // 20) * 20,
+            random.randint(0, (self.game_board.height - 20) // 20) * 20
+        )
 ```
 
-The `GameBoard` class:
+And the `GameBoard` class:
 
 gameboard.py
 ```python
 import pygame
-from constants import SCREEN_SIZE, BLOCK_SIZE
 
 class GameBoard:
-    def __init__(self):
-        self.width, self.height = SCREEN_SIZE[0] // BLOCK_SIZE, SCREEN_SIZE[1] // BLOCK_SIZE
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
 
-    def draw(self, surface, snake, food):
-        surface.fill((0, 0, 0))
-        snake.draw(surface)
-        food.draw(surface)
+    def draw(self, screen, snake, food):
+        screen.fill((0, 0, 0))
+        for position in snake.positions:
+            pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(position[0], position[1], 20, 20))
+        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(food.position[0], food.position[1], 20, 20))
+
+    def is_position_inside(self, position):
+        return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 ```
 
-The `Point` class or data structure:
+Finally, we need a `requirements.txt` file to specify the dependencies:
 
-point.py
-```python
-from dataclasses import dataclass
-
-@dataclass
-class Point:
-    x: int
-    y: int
+requirements.txt
+```
+pygame==2.0.1
 ```
 
-Constants module:
-
-constants.py
-```python
-SCREEN_SIZE = (640, 480)
-FPS = 10
-BLOCK_SIZE = 20
-
-DIRECTIONS = {
-    pygame.K_UP: (0, -1),
-    pygame.K_DOWN: (0, 1),
-    pygame.K_LEFT: (-1, 0),
-    pygame.K_RIGHT: (1, 0),
-}
-```
+Make sure to install the dependencies using `pip install -r requirements.txt` before running the game.
 
 This concludes a fully working implementation.

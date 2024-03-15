@@ -1,0 +1,9 @@
+```sh
+# a) Install dependencies
+# Since the requirements.txt is empty, there are no external dependencies to install.
+# However, if there were dependencies, the command would be:
+# pip install -r requirements.txt --user
+
+# b) Run all necessary parts of the codebase
+python main.py
+```

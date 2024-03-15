@@ -1,0 +1,8 @@
+```sh
+# Since there are no dependencies required, we can directly run the codebase.
+# To run the server part of the codebase
+python main.py server 8080 &
+
+# To run the client part of the codebase (assuming we want to send a file named "example.txt" to localhost on port 8080)
+python main.py client localhost 8080 example.txt
+```

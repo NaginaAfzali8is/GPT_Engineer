@@ -65,16 +65,20 @@
             /* Match the sidebar width */
             width: 72.5%;
             /* Adjust based on the sidebar width */
+            background-color: whitesmoke;
             padding: 20px;
             border-top: 1px solid #ccc;
             border-radius: 30px;
             border: none;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
         }
 
         input[type="text"],
         textarea {
             width: calc(100% - 22px);
             padding: 20px 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
             border: 1px solid #c5c5c5;
             border-radius: 10px;
             box-sizing: border-box;
@@ -207,20 +211,6 @@
             /* Inherit text color */
         }
 
-        .header a {
-            text-decoration: none;
-            /* Remove underline */
-            color: inherit;
-            /* Inherit text color */
-        }
-
-        .header2 a {
-            text-decoration: none;
-            /* Remove underline */
-            color: inherit;
-            /* Inherit text color */
-        }
-
         #removekey:hover {
             background-color: #0859D7;
         }
@@ -235,11 +225,6 @@
         @media only screen and (max-width: 768px) {
             .container {
                 flex-direction: column;
-            }
-
-            .header2 {
-                text-align: center;
-                margin-top: -40px;
             }
 
             .sidebar,
@@ -333,11 +318,6 @@
             .toggle-sidebar {
                 display: none;
             }
-
-            .header2 {
-                text-align: center;
-                margin-top: -400px;
-            }
         }
 
         /* CSS for the close button */
@@ -365,26 +345,6 @@
                 display: block;
                 /* Show the close button on mobile */
             }
-        }
-
-        /* width */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        /* Track */
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        /* Handle */
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-        }
-
-        /* Handle on hover */
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
         }
     </style>
 </head>
@@ -425,13 +385,6 @@
                 </div>
             </div>
             <div class="fixed-form">
-                <div class="header2" id="header2" style="display: none;">
-                    <a href="https://i8is.com">
-                        <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
-                            alt="Your Company Logo">
-                        <h1>GPT Engineer By I8IS</h1>
-                    </a>
-                </div>
                 <div class="download-btn" id="download-message" style="display: none;">
                     <p id="success-message" class="success-message">Your project has been created successfully. Click
                         the button below to download it.</p>
@@ -455,44 +408,20 @@
 
                 <div id="openkey">
                     <label style="color: black; font-size: 20px;" for="openai_key">OpenAI API Key:</label><br>
-                    <div style="display: flex; align-items: center;">
-                        <div style="width: 100%;">
-                            <input placeholder="OpenAI Key" type="text" id="openai_key" name="openai_key" required>
-                        </div>
-                        <div style="margin-right: 20px;">
-                            <button style="width: 150px; height: 60px;" type="submit" value="Add Key"
-                                onclick="submitkey()">Set Key</button>
-                        </div>
+                    <input placeholder="OpenAI Key" type="text" id="openai_key" name="openai_key" required><br>
+                    <div style="text-align: right; margin-right: 20px;">
+                        <button type="submit" value="Add Key" onclick="submitkey()">Set Key</button>
                     </div>
                 </div>
-
                 <form id="openaiForm">
-                    <br>
-                    <label style="color: black; font-size: 20px;" for="project_type">Project Name:</label>
-                    <input placeholder="Project Name" type="text" id="project_type" name="project_type" required>
-                    <br>
-                    <br>
-                    <label style="color: black; font-size: 20px;" for="project_description">Project Description:</label>
-                    <br>
+                    <label style="color: black; font-size: 20px;" for="project_type">Project Name:</label><br>
+                    <input placeholder="Project Name" type="text" id="project_type" name="project_type" required><br>
+                    <label style="color: black; font-size: 20px;" for="project_description">Project
+                        Description:</label><br>
                     <textarea placeholder="Project Description" id="project_description" name="project_description"
-                        rows="2" required></textarea>
-                    <br>
-                    <br>
+                        rows="4" required></textarea><br>
                     <button type="submit" id="createpro" disabled value="Submit">Create Project</button>
                 </form>
-
-                <form id="openaiForm2" style="height: 300px; margin-bottom: 0; overflow-y: auto; display: none;">
-                    <div id="messageContainer"></div>
-
-
-
-                    <input id="user-input" type="text" placeholder="Your answer here..."
-                        style="margin-top: 20px; margin-left: 41px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 80%;">
-                    <button type="submit" value="Submit"
-                        style="margin-top: 10px; padding: 10px 20px; border-radius: 5px;">Send</button>
-
-                </form>
-
             </div>
             <!-- Preloader -->
             <div class="preloader">
@@ -504,7 +433,6 @@
 <script>
     var projectElement;
     var msg;
-    let openai_key;
     function removekey() {
         localStorage.removeItem('openai_key');
         updateUserContent(null)
@@ -518,7 +446,7 @@
         onloadf()
     }
     function submitkey() {
-         openai_key = document.getElementById('openai_key').value;
+        let openai_key = document.getElementById('openai_key').value;
         if (!openai_key) {
             Swal.fire({
                 title: 'Error',
@@ -597,7 +525,7 @@
         if (!filename) {
             filename = document.getElementById("file-name").innerText;
         }
-         openai_key = localStorage.getItem('openai_key');
+        let openai_key = localStorage.getItem('openai_key');
         // Check if the filename has a .zip extension, if not, add it
         // if (!filename.endsWith('.zip')) {
         //     filename += '.zip';
@@ -621,7 +549,7 @@
         // Get the value of the 'msg' variable from the URL query parameters
         msg = "{{ msg }}";
         // Retrieve the openai_key from localStorage
-         openai_key = localStorage.getItem('openai_key');
+        let openai_key = localStorage.getItem('openai_key');
 
         // Check if the openai_key exists in localStorage
         if (openai_key) {
@@ -646,7 +574,7 @@
 
     document.getElementById("openaiForm").addEventListener("submit", function (event) {
         event.preventDefault();
-         openai_key = localStorage.getItem('openai_key')
+        let openai_key = localStorage.getItem('openai_key')
         // Get form data
         const formData = new FormData(event.target);
         // Append openai_key to formData
@@ -655,12 +583,6 @@
         console.log(event.target, "form fields");
         // Make API call
         document.querySelector('.preloader').style.display = 'block';
-        // document.getElementById('openaiForm2').style.display = 'block';
-        // document.getElementById('header').style.marginTop = "30px";
-
-        // document.getElementById('createpro').style.display = 'none'
-        document.getElementById('user-input').textContent = document.getElementById("project_description").value;
-        localStorage.removeItem('messages');
 
         fetch("/setup_openai_key", {
             method: "POST",
@@ -677,8 +599,6 @@
                     document.querySelector('.preloader').style.display = 'none';
 
                     oldProjects(openai_key)
-                    document.getElementById('openaiForm2').style.display = 'none';
-
                     document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = data.file_name;
                     Swal.fire({
@@ -688,30 +608,30 @@
                         confirmButtonText: 'OK'
                     });
                 }
-                // else {
-                //     Swal.fire({
-                //         title: 'Error',
-                //         text: 'Failed to Creating Project.',
-                //         icon: 'error',
-                //         confirmButtonText: 'OK'
-                //     });
-                // }
+                else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to Creating Project.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
                 // Access file name and API cost directly from JSON data
                 file_name = data.file_name;
 
                 // Do something with the file name and API cost
                 console.log('File Name:', file_name);
             })
-        // .catch(error => {
-        //     document.querySelector('.preloader').style.display = 'none';
-        //     Swal.fire({
-        //         title: 'Error',
-        //         text: 'There was an error processing your request.',
-        //         icon: 'error',
-        //         confirmButtonText: 'OK'
-        //     });
-        //     console.error("Error:", error);
-        // });
+            .catch(error => {
+                document.querySelector('.preloader').style.display = 'none';
+                Swal.fire({
+                    title: 'Error',
+                    text: 'There was an error processing your request.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                console.error("Error:", error);
+            });
 
     });
 
@@ -814,17 +734,13 @@
             key.startsWith('sk-')
     }
 
-    var socket = io.connect('http://' + document.domain + ':' + location.port, {
-    timeout: 300000 // 5 minutes
-});
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
     socket.on('connect', function () {
         console.log('Connected to server');
     });
     socket.on('response', function (msg) {
         // Handle the received message
         alert('Received message: ' + msg);
-        document.getElementById('header').style.display = "none";
-        document.getElementById('header2').style.display = "block";
     });
     function sendMessage() {
         var message = document.getElementById('messageInput').value;
@@ -914,66 +830,13 @@
     }
 
     // Function to handle the submission of the user's answer
-
-        document.getElementById("openaiForm2").addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            // Get the user's answer from the form data
-            const userAnswer = document.getElementById('user-input').value;
-            // Add AI message to the array
-            var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
-
-            messageArray.push({ type: 'user', message: userAnswer });
-
-            // Store the updated array back to localStorage
-            localStorage.setItem('messages', JSON.stringify(messageArray));
-            // Retrieve the AI question from local storage
-            const aiQuestion = aiMessage
-
-            // Make an API call to send the AI question and user's answer to the server
-            fetch('/aiClarification', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ question: aiQuestion, answer: userAnswer })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Server response:', data);
-                    // Handle the server response if needed
-                })
-                // .catch(error => {
-                //     console.error('There was a problem with your fetch operation:', error);
-                //     // Handle errors if needed
-                // });
-        });
-
-
-
-        // Function to handle the 'msg_received' event
-        function handleMsgReceivedold(data) {
-
-            console.log(data);
-            var msg = data.msg;
-            document.querySelector('.preloader').style.display = 'none';
-
-            // Call the function to display the pop-up
-            showQuestionPopup('What do you want to clarify?', msg)
-                .then((result) => {
-                    let userAnswer = "no";
-                    if (result.isConfirmed) {
-                        userAnswer = result.value;
-                    }
-
+    function handleAnswerSubmission() {
+        showQuestionPopup('What do you want to clarify?', '{{ msg }}')
+            .then((result) => {
+                if (result.isConfirmed) {
+                    const userAnswer = result.value;
                     // Handle the user's answer (e.g., send it to the server)
                     console.log('User typed:', userAnswer);
-                    document.querySelector('.preloader').style.display = 'block';
 
                     // Make an API call to send the question and answer to the server
                     fetch('/aiClarification', {
@@ -997,105 +860,86 @@
                             console.error('There was a problem with your fetch operation:', error);
                             // Handle errors if needed
                         });
-                });
-        }
-
-        function handleMsgReceived(data) {
-            debugger
-            console.log(data);
-            var msg = data.msg;
-            document.querySelector('.preloader').style.display = 'none';
-
-            // Get the array from localStorage or initialize it if it doesn't exist
-            var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
-
-            // Add AI message to the array
-            messageArray.push({ type: 'ai', message: msg });
-
-            // Store the updated array back to localStorage
-            localStorage.setItem('messages', JSON.stringify(messageArray));
-
-            // Display the AI message
-            displayMessages();
-
-            // Show the user input form
-    document.getElementById('openaiForm2').style.display = 'block';
-        // document.getElementById('header').style.marginTop = "30px";
-
-        document.getElementById('createpro').style.display = 'none'
-            }
-
-        function displayFilename(data) {
-            if (data.file_name) {
-
-                document.querySelector('.preloader').style.display = 'none';
-
-                oldProjects(openai_key)
-                document.getElementById('openaiForm2').style.display = 'none';
-
-                document.getElementById('download-message').style.display = 'block';
-                document.getElementById('file-name').innerHTML = data.file_name;
-                Swal.fire({
-                    title: 'Success',
-                    text: 'Project Created Successfully!',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                });
-            }
-            else {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Failed to Creating Project.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-            // Access file name and API cost directly from JSON data
-            file_name = data.file_name;
-
-            // Do something with the file name and API cost
-            console.log('File Name:', file_name);
-        }
-var aiMessage ;
-        // Listen for the 'msg_received' event from the server
-        socket.on('msg_received', function (data) {
-            debugger
-            console.log(data);
-            aiMessage=data.msg
-            handleMsgReceived(data)
-        })
-        // socket.on('msg_received', handleMsgReceived);
-        socket.on('success_event', displayFilename);
-
-
-        function displayMessages() {
-            var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
-
-            var formHTML = '';
-
-            messageArray.forEach(function (item) {
-                if (item.type === 'ai') {
-                    formHTML += `
-                <div style="display: flex; align-items: center;">
-                    <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
-                        src="https://repository-images.githubusercontent.com/695656843/4cf5a417-43d3-4f49-8b6a-337045bc7d8b">
-                    <h3 style="margin: 0;">GPT-Engineer</h3>
-                </div>
-                <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
-                } else if (item.type === 'user') {
-                    formHTML += `
-                <div style="display: flex; align-items: center;">
-                    <img width="31" style="border-radius: 100%; margin-right: 10px;"
-                        src="https://lh3.googleusercontent.com/a/ACg8ocLu0K8CXcdZDH9OSuOjAA7nRPLq_IQ3cgwj0AU2Mwdi=s96-c"
-                        alt="">
-                    <h3 style="margin: 0;">You</h3>
-                </div>
-                <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
                 }
             });
+    }
 
-            document.getElementById('messageContainer').innerHTML = formHTML;
+    // Function to handle the 'msg_received' event
+    function handleMsgReceived(data) {
+        
+        console.log(data);
+        var msg = data.msg;
+        document.querySelector('.preloader').style.display = 'none';
+
+        // Call the function to display the pop-up
+        showQuestionPopup('What do you want to clarify?', msg)
+            .then((result) => {
+                let userAnswer = "no";
+                if (result.isConfirmed) {
+                    userAnswer = result.value;
+                }
+
+                // Handle the user's answer (e.g., send it to the server)
+                console.log('User typed:', userAnswer);
+                document.querySelector('.preloader').style.display = 'block';
+
+                // Make an API call to send the question and answer to the server
+                fetch('/aiClarification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: 'What do you want to clarify?', answer: userAnswer })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Server response:', data);
+                        // Handle the server response if needed
+                    })
+                    .catch(error => {
+                        console.error('There was a problem with your fetch operation:', error);
+                        // Handle errors if needed
+                    });
+            });
+    }
+    function displayFilename(data) {
+        if (data.filename) {
+
+            document.querySelector('.preloader').style.display = 'none';
+
+            oldProjects(openai_key)
+            document.getElementById('download-message').style.display = 'block';
+            document.getElementById('file-name').innerHTML = data.file_name;
+            Swal.fire({
+                title: 'Success',
+                text: 'Project Created Successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
         }
+        else {
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to Creating Project.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+        // Access file name and API cost directly from JSON data
+        file_name = data.file_name;
+
+        // Do something with the file name and API cost
+        console.log('File Name:', file_name);
+    }
+
+    // Listen for the 'msg_received' event from the server
+    socket.on('msg_received', handleMsgReceived);
+    socket.on('success_event', displayFilename);
 
 </script>
 
