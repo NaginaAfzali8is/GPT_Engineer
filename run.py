@@ -2,6 +2,7 @@ from flask_socketio import SocketIO
 import io
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+import shutil
 
 from flask_pymongo import PyMongo
 import zipfile
@@ -75,10 +76,36 @@ class User:
 
     def save_to_mongo(self):
         users_collection = mongo.db.users
-        existing_user = users_collection.find_one(
-            {'openai_key': self.openai_key})
-        if existing_user:
-            # If user exists, update the project_name, api_cost, project_zip_binary, and last_three_messages
+        existing_userProject = users_collection.find_one({
+            'openai_key': self.openai_key,
+            'project_array': {'$elemMatch': {'project_name': self.project_name}}
+        })
+
+        if existing_userProject:
+            user_id = existing_userProject['_id']
+
+            # If user exists, update the project_zip_binary
+            users_collection.update_one(
+                {'openai_key': self.openai_key},
+                {
+                    '$set': {
+                        'project_array.$[elem].project_zip_binary': self.project_zip_binary
+                    }
+                },
+                array_filters=[{'elem.project_name': self.project_name}],
+                upsert=True
+            )
+            print("Zip file binary updated successfully.")
+            return user_id
+
+        existing_userApi = users_collection.find_one(
+            {'openai_key': self.openai_key}
+        )
+
+        if existing_userApi:
+            user_id = existing_userApi['_id']
+
+            # If user exists, update the project_name, api_cost, and project_zip_binary
             users_collection.update_one(
                 {'openai_key': self.openai_key},
                 {
@@ -86,13 +113,14 @@ class User:
                         'project_array': {
                             'project_name': self.project_name,
                             'api_cost': self.api_cost,
-                            'project_zip_binary': self.project_zip_binary,
-                            'last_three_messages': self.last_three_messages
+                            'project_zip_binary': self.project_zip_binary
                         }
                     }
                 },
                 upsert=True
             )
+            return user_id
+
         else:
             # If user doesn't exist, create a new document
             user_data = {
@@ -107,6 +135,7 @@ class User:
             }
             result = users_collection.insert_one(user_data)
             return result.inserted_id
+
 
     @staticmethod
     def exists(project_name, openai_key):
@@ -179,6 +208,7 @@ def setup_openai_key():
         projectname = request.form["project_type"]
         projectName = projectname.strip().replace(' ', '_')
         projectDesc = request.form["project_description"]
+        improve_mode = request.form["improve_true"]
         global project_Name ,Api_Key
         Api_Key = openai_key
         project_Name=projectName
@@ -191,12 +221,6 @@ def setup_openai_key():
         #     assert not (clarify_mode or lite_mode), "Clarify and lite mode are not active for improve mode"
 # Check if project name and key combination already exists
 
-        improve_mode: bool = typer.Option(
-            False,
-            "--improve",
-            "-i",
-            help="Improve files_dict from existing project.",
-        ),
         lite_mode: bool = typer.Option(
             False,
             "--lite",
@@ -209,25 +233,6 @@ def setup_openai_key():
             "-c",
             help="Lite mode - discuss specification with AI before implementation.",
         ),
-        self_heal_mode: bool = typer.Option(
-            False,
-            "--self-heal",
-            "-sh",
-            help="Lite mode - discuss specification with AI before implementation.",
-        ),
-        azure_endpoint: str = typer.Option(
-            "",
-            "--azure",
-            "-a",
-            help="""Endpoint for your Azure OpenAI Service (https://xx.openai.azure.com).
-                In that case, the given model is the deployment name chosen in the Azure AI Studio.""",
-        ),
-        use_custom_preprompts: bool = typer.Option(
-            False,
-            "--use-custom-preprompts",
-            help="""Use your project's custom preprompts instead of the default ones.
-            Copies all original preprompts to the project's workspace if they don't exist there.""",
-        ),
         verbose: bool = typer.Option(False, "--verbose", "-v"),
 
         # Check for mode conflicts
@@ -237,7 +242,7 @@ def setup_openai_key():
         model: str = typer.Argument(
             "gpt-4-1106-preview", help="model id string"),
         temperature: float = 0.1,
-        if User.exists(projectName, openai_key):
+        if User.exists(projectName, openai_key) and not improve_mode:
             file_name = f'{projectName}.zip'
 
             # Return response as JSON
@@ -309,12 +314,41 @@ def setup_openai_key():
                     # Save the original standard input
                     # original_stdin = sys.stdin
                     # Generate or improve project
-                    # if improve_mode:
-                    #     fileselector = FileSelector(project_path)
-                    #     files_dict = fileselector.ask_for_files()
-                    #     files_dict = agent.improve(files_dict, prompt)
-                    # else:
-                    files_dict = agent.init(prompt)
+                    if improve_mode=='true':
+                        fileselector = FileSelector(projectName)
+                        # files_dict = fileselector.ask_for_files()
+                         # Fetch project data from the database based on project_name or any other identifier
+                        project_data = User.get_by_project_name_and_api_key(projectName, Api_Key)
+                        project_name = project_data['project_array'][0]
+                        project_zip_binary = project_name['project_zip_binary']
+                        # Assuming you have retrieved project_data from the database
+                        # Assuming project_zip_binary contains the binary data of the ZIP archive
+                        # Unzip the binary data
+                        # Check if the project_path exists
+                        if os.path.exists(project_path):
+                            # Remove the existing project_path
+                            shutil.rmtree(project_path)
+                        with zipfile.ZipFile(io.BytesIO(project_zip_binary), "r") as zip_ref:
+                            # Extract the contents to a temporary directory
+                            zip_ref.extractall(project_path)
+
+                        # Now that the archive is extracted, you can use FileSelector to interactively select files
+                        file_selector = FileSelector(project_path)
+                        socketio.emit('alert_received', {'msg': "Please select and deselect (add # in front) files, save it, and close it to continue..."})
+
+                        selected_files_dict = file_selector.ask_for_files()
+                    # Create a new dictionary to store the updated keys
+                        updated_files_dict = {}
+
+                        # Iterate over the selected files dictionary and replace double backslashes with single backslashes in the keys
+                        for key, value in selected_files_dict.items():
+                            updated_key = key.replace("\\\\", "/")
+                            updated_files_dict[updated_key] = value
+                            # Convert the regular dictionary to a FilesDict object
+                        files_dict = FilesDict(updated_files_dict)
+                        files_dict = agent.improve(files_dict, prompt)
+                    else:
+                        files_dict = agent.init(prompt)
                     # collect user feedback if user consents
                     config = (code_gen_fn.__name__, execution_fn.__name__)
                     collect_and_send_human_review(
@@ -331,17 +365,17 @@ def setup_openai_key():
                     # Save project zip file to MongoDB
                     zip_file_binary = zip_buffer.getvalue()
                     new_user = User(openai_key, projectName,
-                                    api_cost, zip_file_binary)
+                                    api_cost, zip_file_binary, [])
                     inserted_id = new_user.save_to_mongo()
 
                     if inserted_id:
-                        print(f"Project zip file saved to MongoDB with ID: {
-                              inserted_id}")
+                        print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
                     else:
                         print("Failed to save project zip file to MongoDB.")
 
                     zip_buffer.close()
-
+                        
+                    shutil.rmtree(project_path)
                     # Create a zip file of the project directory
                     # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
                     # for root, dirs, files in os.walk(project_path):
@@ -386,9 +420,8 @@ def success():
     files_dict_str = request.args.get('files_dict')
     # Convert string representation of dictionary into an actual dictionary
     files_dict = ast.literal_eval(files_dict_str)    # Accessing project_name and openai_key from session
-    global project_Name, Api_Key
     zip_buffer = io.BytesIO()
-    global Messages, User_input, aI, Preprompts, Memoryy
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key
 
     with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
         for filename, content in files_dict.items():
@@ -602,12 +635,14 @@ def aiClarification():
     # Modify the User_input based on the received data
     User_input = userAnswer
 
-    # User_input += """
-    # \n\n
-    # Is anything else unclear? If yes, ask another question.\n
-    # Otherwise state: "Nothing to clarify"
-    # """
-    Messages = aI.next(Messages, User_input, step_name=curr_fn())
+    if not User_input or User_input == "c":
+        Messages = aI.next(
+            Messages,
+            "Make your own assumptions and state them explicitly before starting",
+            step_name=curr_fn(),
+            )
+    else:
+        Messages = aI.next(Messages, User_input, step_name=curr_fn())
     msg = Messages[-1].content.strip()
 
     if "nothing to clarify" not in msg.lower() and not msg.lower().startswith("no"):
