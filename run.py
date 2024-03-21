@@ -786,4 +786,5 @@ if __name__ == "__main__":
     # Check if the OPENAI_API_KEY is set, if not redirect to the setup page
     print("OpenAI API key is not set. Please set it up.")
     
-    socketio.run(app, debug=True, port=5000)
+    # Run the application with socket connection on the specified URL
+    socketio.run(app, debug=True, host='52.60.57.157', port=8000)
