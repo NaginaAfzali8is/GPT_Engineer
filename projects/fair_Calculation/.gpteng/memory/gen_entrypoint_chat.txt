@@ -1,5 +1,0 @@
-```sh
-# Since there are no external dependencies, we can skip the installation step and directly run the codebase.
-
-python main.py
-```

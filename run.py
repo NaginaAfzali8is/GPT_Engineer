@@ -292,7 +292,7 @@ def setup_openai_key():
 
                     # Configure functions and paths
                     # configure generation function
-                    if clarify_mode:
+                    if clarify_mode and not improve_mode == 'true':
                         code_gen_fn = clarified_generated
                     else:
                         code_gen_fn = gen_code
@@ -314,36 +314,32 @@ def setup_openai_key():
                     # Save the original standard input
                     # original_stdin = sys.stdin
                     # Generate or improve project
-                    if improve_mode=='true':
+                    if improve_mode == 'true':
                         fileselector = FileSelector(projectName)
-                        # files_dict = fileselector.ask_for_files()
-                         # Fetch project data from the database based on project_name or any other identifier
                         project_data = User.get_by_project_name_and_api_key(projectName, Api_Key)
                         project_name = project_data['project_array'][0]
                         project_zip_binary = project_name['project_zip_binary']
-                        # Assuming you have retrieved project_data from the database
-                        # Assuming project_zip_binary contains the binary data of the ZIP archive
-                        # Unzip the binary data
-                        # Check if the project_path exists
+                        
                         if os.path.exists(project_path):
-                            # Remove the existing project_path
                             shutil.rmtree(project_path)
+                        
                         with zipfile.ZipFile(io.BytesIO(project_zip_binary), "r") as zip_ref:
-                            # Extract the contents to a temporary directory
                             zip_ref.extractall(project_path)
 
-                        # Now that the archive is extracted, you can use FileSelector to interactively select files
                         file_selector = FileSelector(project_path)
                         socketio.emit('alert_received', {'msg': "Please select and deselect (add # in front) files, save it, and close it to continue..."})
-
+                        
+                        # Ensure that selected_files_dict is properly initialized
                         selected_files_dict = file_selector.ask_for_files()
-                    # Create a new dictionary to store the updated keys
-                        updated_files_dict = {}
 
-                        # Iterate over the selected files dictionary and replace double backslashes with single backslashes in the keys
-                        for key, value in selected_files_dict.items():
-                            updated_key = key.replace("\\\\", "/")
-                            updated_files_dict[updated_key] = value
+                        # If selected_files_dict is not empty, proceed with further operations
+                        if selected_files_dict:
+                            updated_files_dict = {}
+
+                            # Iterate over the selected files dictionary and replace double backslashes with single backslashes in the keys
+                            for key, value in selected_files_dict.items():
+                                updated_key = key.replace("\\\\", "/")
+                                updated_files_dict[updated_key] = value
                             # Convert the regular dictionary to a FilesDict object
                         files_dict = FilesDict(updated_files_dict)
                         files_dict = agent.improve(files_dict, prompt)
@@ -375,8 +371,8 @@ def setup_openai_key():
 
                     zip_buffer.close()
                         
-                    shutil.rmtree(project_path)
-                    # Create a zip file of the project directory
+                    if os.path.exists(project_path):
+                        shutil.rmtree(project_path)                    # Create a zip file of the project directory
                     # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
                     # for root, dirs, files in os.walk(project_path):
                     #     for file in files:
@@ -783,7 +779,4 @@ def load_prompt(input_repo: DiskMemory, improve_mode):
 
 
 if __name__ == "__main__":
-    # Check if the OPENAI_API_KEY is set, if not redirect to the setup page
-    print("OpenAI API key is not set. Please set it up.")
-    
     socketio.run(app, debug=True, port=5000)

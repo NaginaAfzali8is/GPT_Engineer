@@ -779,7 +779,7 @@
             userDataContainer.innerHTML = '';
 
             // Add user data to the page
-            var projects = data.project_array;
+            var projects = data.project_array.reverse(); // Reverse the array
             projects.forEach(project => {
                 // Create a container div for each project
                 var projectContainer = document.createElement('div');
@@ -807,6 +807,7 @@
                 projectParagraph.textContent = project.project_name;
                 projectParagraph.style.marginLeft = '10px'; // Add left margin for spacing
                 projectParagraph.style.color = 'white'; // Add left margin for spacing
+                projectParagraph.style.cursor = 'pointer';
                 projectParagraph.addEventListener('click', function () {
                     document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = project.project_name;

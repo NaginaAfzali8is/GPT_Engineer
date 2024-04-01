@@ -1,3 +1,0 @@
-# This file should include all the necessary packages for the game.
-# If using pygame for rendering, uncomment the following line:
-# pygame==2.0.1

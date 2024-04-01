@@ -1,6 +1,0 @@
-# Remove '#' to select a file.
-
-# gpt-engineer can only read selected files. Including irrelevant files will degrade performance, cost additional tokens and potentially overflow token limit.
-
-[files]
-# 
