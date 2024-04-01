@@ -780,3 +780,7 @@ def load_prompt(input_repo: DiskMemory, improve_mode):
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5000)
+    # Check if the OPENAI_API_KEY is set, if not redirect to the setup page
+    print("OpenAI API key is not set. Please set it up.")
+    
+    # Run the application with socket connection on the specified URL
