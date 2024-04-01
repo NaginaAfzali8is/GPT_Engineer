@@ -187,9 +187,27 @@
         }
 
         .new-chat {
-            text-align: center;
-            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            /* Distribute items along the main axis with space between them */
+            align-items: center;
+            /* Align items vertically in the center */
         }
+
+
+        #createnew {
+            background-color: #012152;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+            /* Add margin to separate it from the "Remove Key" button */
+        }
+
 
         #removekey {
             display: none;
@@ -202,6 +220,7 @@
             font-size: 16px;
             transition: background-color 0.3s;
         }
+
 
         .header a {
             text-decoration: none;
@@ -407,12 +426,80 @@
         ::placeholder {
             font-family: inherit;
         }
+
+        /* CSS styles for the disabled background */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        /* CSS styles for the popup */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border-radius: 20px;
+            /* Adjust border radius for a more rounded appearance */
+            padding: 40px;
+            /* Increase padding for more space */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            max-width: 80%;
+            /* Limit maximum width of the popup */
+        }
+
+        .popup h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            /* Increase font size */
+        }
+
+        .popup label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .popup button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            /* Increase button padding */
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .popup button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 
 <body>
+
+    <div class="overlay"></div>
+
+    <div class="popup">
+        <h2>Select Files</h2>
+        <p>Select files that you want to improve, at least 1 file is required</p> <!-- Add the note here -->
+        <div id="filesContainer"></div>
+        <button id="submitButton">Submit</button>
+    </div>
+
     <div class="container">
-        <!-- Button to toggle sidebar -->
 
         <button class="toggle-sidebar" onclick="toggleSidebar()">&#9776; Menu</button>
 
@@ -425,6 +512,8 @@
             </div>
             <div class="new-chat">
                 <h2><button id="removekey" onclick="removekey()"><i class="fas fa-sign-out-alt"></i> Exit Api</button>
+                </h2>
+                <h2><button id="createnew" onclick="CreateNew()"><i class="fas fa-sign-out-alt"></i> Create New</button>
                 </h2>
             </div>
             <h2>Project History</h2>
@@ -886,62 +975,6 @@
     }
 
 
-
-
-
-    // Attach click event listener to trigger download
-    // projectElement.addEventListener('click', function() {
-    //     console.log(projectElement);
-    //         downloadFile(project);
-    //     });
-    // Add event listener for the download button click
-    // document.getElementById('download-buttonn').addEventListener('click', function() {
-    //     // Extract filename
-    //     console.log();
-    //     const fileName = document.getElementById('file-name').textContent;
-
-    //     // Construct the download URL
-    //     const downloadUrl = `/projectsZip/${encodeURIComponent(file_name)}`;
-
-    //     // Create a temporary link element
-    //     const a = document.createElement('a');
-    //     a.href = downloadUrl;
-    //     a.download = file_name;
-
-    //     // Append link to the body and trigger download
-    //     document.body.appendChild(a);
-    //     a.click();
-
-    //     // Cleanup
-    //     document.body.removeChild(a);
-    // });
-
-    // Add event listener for the download button click
-    // document.getElementById('download-button').addEventListener('click', function() {
-    //     // Extract filename
-
-    //     // Call the download API
-    //     fetch(`/download`, {
-    //         method: 'GET',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //             // Add any other headers if required
-    //         }
-    //     })
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error('Network response was not ok');
-    //         }
-    //         alert("file downloaded successfully")
-    //         // Initiate download
-    //         return response.blob();
-    //     })
-    //     .catch(error => {
-    //         console.error('Error:', error);
-    //     });
-    // });
-
-    // Function to display SweetAlert pop-up with a question
     // Function to display SweetAlert pop-up with a question
     function showQuestionPopup(question, msg) {
         const inputConfig = {
@@ -1118,6 +1151,7 @@
         aiMessage = data.msg
         handleMsgReceived(data)
     })
+
     // socket.on('msg_received', handleMsgReceived);
     socket.on('success_event', displayFilename);
 
@@ -1171,6 +1205,119 @@
 
         document.getElementById('messageContainer').innerHTML = formHTML;
     }
+
+    function CreateNew() {
+        document.getElementById('download-message').style.display = 'none';
+        document.getElementById('project_type').value = '';
+        document.getElementById('project_type').disabled = false
+        document.getElementById('improve_true').value = 'false'
+
+        // display improve form 
+        document.getElementById('improve').style.display = ' none';
+        document.getElementById('create').style.display = 'block'
+        document.getElementById('createpro').innerHTML = 'Create Project';
+    }
+
+    // Listen for the 'files_received' event from the server
+    socket.on('files_received', function (data) {
+        console.log("files", data.files);
+        document.querySelector('.overlay').style.display = 'block';
+        document.querySelector('.popup').style.display = 'block';
+        document.querySelector('.preloader').style.display = 'none';
+
+        // Disable interaction with the main container
+
+        var filesContainer = document.getElementById('filesContainer');
+
+        // Create checkboxes for each filename
+        data.files.forEach(function (filename) {
+            var checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'file';
+            checkbox.value = filename;
+
+            var label = document.createElement('label');
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(filename));
+
+            filesContainer.appendChild(label);
+        });
+
+        // Add a submit button
+        var submitButton = document.getElementById('submitButton');
+        submitButton.addEventListener('click', function () {
+            // Retrieve the selected filenames
+            var selectedFiles = Array.from(filesContainer.querySelectorAll('input[name="file"]:checked')).map(function (checkbox) {
+                return checkbox.value;
+            });
+
+            // Check if at least one file is selected
+            if (selectedFiles.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'Please select at least one file.',
+                });
+                return;
+            }
+
+            // Submit the selected filenames to the server
+            submitSelectedFiles(selectedFiles);
+        });
+    });
+
+    function submitSelectedFiles(selectedFiles) {
+        // Send the selected filenames to the server
+        // You can use AJAX or another method to send the data to the server
+        console.log('Selected files:', selectedFiles);
+
+        // Hide the popup
+        document.querySelector('.popup').style.display = 'none';
+
+        // Enable interaction with the main container
+        document.querySelector('.overlay').style.display = 'none';
+
+        // Display the preloader
+        document.querySelector('.preloader').style.display = 'block';
+
+        // Submit files to the server
+        fetch('/improveProject', {
+            method: 'POST',
+            body: JSON.stringify(selectedFiles),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+
+                    document.querySelector('.preloader').style.display = 'none';
+
+                    oldProjects(openai_key)
+                    document.getElementById('openaiForm2').style.display = 'none';
+                    document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
+
+                    document.getElementById('download-message').style.display = 'block';
+                    document.getElementById('file-name').innerHTML = data.file_name;
+                    Swal.fire({
+                        title: 'Success',
+                        text: 'Project Updated Successfully!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                }
+                file_name = data.file_name;
+            })
+            .catch(error => {
+
+                document.querySelector('.preloader').style.display = 'none';
+
+                console.error('Error:', error);
+                // Handle errors
+            });
+    }
+
 
 </script>
 

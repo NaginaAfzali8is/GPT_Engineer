@@ -57,6 +57,26 @@ class FileSelector:
         "cost additional tokens and potentially overflow token limit.\n\n"
     )
 
+    def get_current_files(self):
+        """
+        Returns a list of file names in the project directory.
+        """
+        all_files = []
+
+        for path in self.project_path.glob("**/*"):
+            if path.is_file():
+                rel_path = path.relative_to(self.project_path)
+
+                parts = rel_path.parts
+                if any(part.startswith(".") for part in parts):
+                    continue  # Skip hidden files
+                if any(part in self.IGNORE_FOLDERS for part in parts):
+                    continue  # Skip ignored folders
+
+                all_files.append(str(rel_path))
+
+        return all_files
+
     def __init__(self, project_path: Union[str, Path]):
         """
         Initializes the FileSelector with a given project path.

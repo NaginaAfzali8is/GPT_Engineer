@@ -1,0 +1,59 @@
+To make the design of the popup more attractive, we would typically need to update the `popup.html` file to include better styling and possibly some additional HTML elements to improve the layout. We might also want to update the `popup.js` file if we're adding interactive elements that require JavaScript. Additionally, we could add a new `styles.css` file to include all the CSS rules that will make the popup look more attractive.
+
+Here's a step-by-step plan for the changes:
+
+1. Update `popup.html` to include a link to the new `styles.css` file.
+2. Add more semantic HTML elements to `popup.html` for better structure, such as headers, sections, and footers.
+3. Create a new `styles.css` file with attractive styling rules. This will include setting a color scheme, fonts, padding, margins, and possibly animations or transitions for interactive elements.
+4. If necessary, update `popup.js` to handle any new interactive elements that we've added to the popup, such as buttons or form elements.
+
+Now, let's write the changes in the unified "git diff" syntax.
+
+```diff
+--- /dev/null
++++ styles.css
+@@ -0,0 +1,20 @@
++body {
++    font-family: Arial, sans-serif;
++    background-color: #f9f9f9;
++    margin: 0;
++    padding: 20px;
++    color: #333;
++}
++
++h1 {
++    color: #5c5c5c;
++    font-size: 24px;
++    margin-bottom: 10px;
++}
++
++button {
++    background-color: #008CBA;
++    color: white;
++    padding: 15px 32px;
++    text-align: center;
++    display: inline-block;
++    font-size: 16px;
++}
+```
+
+```diff
+--- popup.html
++++ popup.html
+@@ -1 +1,11 @@
++<link rel="stylesheet" type="text/css" href="styles.css">
+ <div>
++    <header>
++        <h1>Popup Title</h1>
++    </header>
++    <section>
++        <p>Welcome to the attractive popup!</p>
++        <button>Click me!</button>
++    </section>
++    <footer>
++        <p>Footer content here.</p>
++    </footer>
+ </div>
+```
+
+These changes yield a fully functional program according to the instructions.
