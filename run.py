@@ -339,8 +339,7 @@ def setup_openai_key():
                     inserted_id = new_user.save_to_mongo()
 
                     if inserted_id:
-                        print(f"Project zip file saved to MongoDB with ID: {
-                              inserted_id}")
+                        print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
                     else:
                         print("Failed to save project zip file to MongoDB.")
 

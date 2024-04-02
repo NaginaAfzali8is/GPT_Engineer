@@ -906,7 +906,7 @@
 
                     // display improve form 
                     document.getElementById('improve').style.display = ' block';
-                    document.getElementById('create').style.display = 'none'
+                    document.getElementById('create').style.display = 'none';
                     document.getElementById('createpro').innerHTML = 'Improve Project';
                 })
                 // Attach click event listener to trigger download
@@ -1004,6 +1004,7 @@
 
     document.getElementById("openaiForm2").addEventListener("submit", function (event) {
         event.preventDefault();
+        document.querySelector('.preloader').style.display = 'block';
 
         // Get the user's answer from the form data
         const userAnswer = document.getElementById('user-input').value;
@@ -1215,6 +1216,8 @@
         // display improve form 
         document.getElementById('improve').style.display = ' none';
         document.getElementById('create').style.display = 'block'
+        document.getElementById('createpro').style.display = 'block'
+        document.getElementById('project_description').value = ''
         document.getElementById('createpro').innerHTML = 'Create Project';
     }
 
@@ -1293,7 +1296,7 @@
                 if (data.success) {
 
                     document.querySelector('.preloader').style.display = 'none';
-
+                    ducument.getElementById('improve_true').style.display = 'none';
                     oldProjects(openai_key)
                     document.getElementById('openaiForm2').style.display = 'none';
                     document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'

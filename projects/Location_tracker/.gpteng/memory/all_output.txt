@@ -1,0 +1,154 @@
+To create a React Native project that tracks a user's live location, we will need to set up a React Native app with the necessary permissions and use the geolocation API to obtain and track the user's location.
+
+Here are the core components we will need:
+
+1. `App.js`: The main entry point of the application.
+2. `LocationTracker.js`: A React component that handles location tracking.
+3. `AndroidManifest.xml` and `Info.plist`: Configuration files for Android and iOS to request location permissions.
+4. `package.json`: Defines the project dependencies and scripts.
+5. `app.json`: Configuration for the React Native app.
+
+Let's start by setting up the `package.json` file to define our project dependencies.
+
+package.json
+```json
+{
+  "name": "LocationTrackingApp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "17.0.2",
+    "react-native": "0.66.3",
+    "react-native-geolocation-service": "^5.3.0-beta.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/runtime": "^7.16.3",
+    "@react-native-community/eslint-config": "^3.0.0",
+    "babel-jest": "^27.3.1",
+    "eslint": "^7.32.0",
+    "jest": "^27.3.1",
+    "metro-react-native-babel-preset": "^0.66.2",
+    "react-test-renderer": "17.0.2"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
+```
+
+Next, we'll create the `App.js` file, which is the main entry point of our application.
+
+App.js
+```jsx
+import React from 'react';
+import LocationTracker from './LocationTracker';
+
+const App = () => {
+  return <LocationTracker />;
+};
+
+export default App;
+```
+
+Now, let's create the `LocationTracker.js` component, which will handle the location tracking logic.
+
+LocationTracker.js
+```jsx
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, PermissionsAndroid, Platform } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
+
+const LocationTracker = () => {
+  const [location, setLocation] = useState(null);
+
+  const requestPermissions = async () => {
+    if (Platform.OS === 'ios') {
+      Geolocation.requestAuthorization('whenInUse');
+    } else {
+      await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+    }
+  };
+
+  useEffect(() => {
+    requestPermissions();
+    const watchId = Geolocation.watchPosition(
+      (position) => {
+        setLocation(position);
+      },
+      (error) => {
+        console.error(error);
+      },
+      { enableHighAccuracy: true, distanceFilter: 0 },
+    );
+
+    return () => Geolocation.clearWatch(watchId);
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Text>Live Location Tracker</Text>
+      {location && (
+        <Text>
+          Latitude: {location.coords.latitude}, Longitude: {location.coords.longitude}
+        </Text>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+export default LocationTracker;
+```
+
+For Android, we need to ensure that the `AndroidManifest.xml` file has the necessary permissions.
+
+android/app/src/main/AndroidManifest.xml
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.locationtrackingapp">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+      ...
+    >
+        ...
+    </application>
+</manifest>
+```
+
+For iOS, we need to add the necessary keys to the `Info.plist` file to request location permissions.
+
+ios/LocationTrackingApp/Info.plist
+```xml
+<dict>
+  ...
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>We need your location for tracking purposes</string>
+  <key>NSLocationAlwaysUsageDescription</key>
+  <string>We need your location for tracking purposes</string>
+  ...
+</dict>
+```
+
+Make sure to replace `com.locationtrackingapp` with your actual package name.
+
+This concludes a fully working implementation. Please note that you will need to run `npm install` or `yarn` to install the dependencies before running the app. Additionally, you may need to link the `react-native-geolocation-service` library manually if auto-linking does not work.
