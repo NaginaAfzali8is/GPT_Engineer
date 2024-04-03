@@ -1,0 +1,139 @@
+To make the `index.html` attractive and add a new page for displaying projects, we will need to update the `index.html` with a modern layout and styling, and create a new HTML file for the projects page. We will also create a `styles.css` file to define the styles for both pages.
+
+PLANNING:
+1. Update `index.html` with a new structure including a navigation bar, a welcome section, and a footer.
+2. Create a `projects.html` file that will list projects with a similar structure to `index.html`, including a navigation bar and a footer.
+3. Create a `styles.css` file to style both `index.html` and `projects.html` with attractive layouts, fonts, and colors.
+
+OUTPUT:
+
+```html
+index.html
+<<<<<<< HEAD
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="welcome">
+            <h1>Welcome to My Portfolio</h1>
+            <p>Discover my projects and skills.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 My Portfolio</p>
+    </footer>
+</body>
+</html>
+>>>>>>> updated
+```
+
+```html
+projects.html
+<<<<<<< HEAD
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="projects.html">Projects</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="project-list">
+            <h1>My Projects</h1>
+            <!-- Project items will be added here -->
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 My Portfolio</p>
+    </footer>
+</body>
+</html>
+>>>>>>> updated
+```
+
+```css
+styles.css
+<<<<<<< HEAD
+=======
+/* General styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Navigation bar styles */
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+nav ul li {
+    float: left;
+}
+
+nav ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+nav ul li a:hover {
+    background-color: #111;
+}
+
+/* Welcome section styles */
+.welcome {
+    text-align: center;
+    padding: 50px;
+    background-color: #f2f2f2;
+}
+
+/* Footer styles */
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Project list styles */
+.project-list {
+    padding: 20px;
+}
+>>>>>>> updated
+```

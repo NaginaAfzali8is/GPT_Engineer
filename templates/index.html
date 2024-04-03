@@ -485,6 +485,15 @@
         .popup button:hover {
             background-color: #0056b3;
         }
+
+        .right-corner {
+            position: fixed;
+            top: 30px;
+            right: 10px;
+            margin: 20px;
+            padding: 10px;
+            display: none;
+        }
     </style>
 </head>
 
@@ -525,6 +534,21 @@
             </div>
         </div>
         <div class="main">
+            <div class="right-corner">
+                <!-- Enhanced download button -->
+                <!-- <a href="/download" id="download-link" class="download-button"> -->
+                <a href="#" id="download-link" class="download-button" onclick="downloadFile(null)">
+
+                    <span id="file-name">Download File</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="feather feather-download">
+                        <polyline points="8 17 12 21 16 17"></polyline>
+                        <line x1="12" y1="12" x2="12" y2="21"></line>
+                        <line x1="7" y1="7" x2="17" y2="7"></line>
+                    </svg>
+                </a>
+            </div>
             <div class="content">
                 <div class="header">
                     <a href="https://i8is.com">
@@ -576,10 +600,25 @@
                     </div>
                 </div>
 
+                <form id="openaiForm2" style="height: 300px; margin-bottom: 0; overflow-y: auto; display: none;">
+                    <h1 id="pheading" style="color: #012152 !important; display: none;">Clarifications:</h1>
+                    <div id="note" style="background-color: lightgray; padding: 10px;">
+                        <strong>Note:</strong> (answer in text, or "c" to move on)
+                    </div>
+                    <div id="messageContainer"></div>
+                    <div id="inputt">
+                        <input id="user-input" type="text" placeholder="Your answer here..."
+                            style="margin-top: 20px; margin-left: 41px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 80%;">
+                        <button type="submit" value="Submit"
+                            style="margin-top: 10px; padding: 10px 20px; border-radius: 5px;">Send</button>
+                    </div>
+                </form>
                 <form id="openaiForm">
                     <br>
-                    <label style="color: black; font-size: 20px;" for="project_type">Project Name:</label>
-                    <input placeholder="Project Name" type="text" id="project_type" name="project_type" required>
+                    <div id="pName">
+                        <label style="color: black; font-size: 20px;" for="project_type">Project Name:</label>
+                        <input placeholder="Project Name" type="text" id="project_type" name="project_type" required>
+                    </div>
                     <br>
                     <br>
                     <label id="create" style="color: black; font-size: 20px;" for="project_description">Project
@@ -600,18 +639,7 @@
                     <br>
                 </form>
 
-                <form id="openaiForm2" style="height: 300px; margin-bottom: 0; overflow-y: auto; display: none;">
-                    <div style="background-color: lightgray; padding: 10px;">
-                        <strong>Note:</strong> (answer in text, or "c" to move on)
-                    </div>
-                    <div id="messageContainer"></div>
 
-                    <input id="user-input" type="text" placeholder="Your answer here..."
-                        style="margin-top: 20px; margin-left: 41px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 80%;">
-                    <button type="submit" value="Submit"
-                        style="margin-top: 10px; padding: 10px 20px; border-radius: 5px;">Send</button>
-
-                </form>
 
             </div>
             <!-- Preloader -->
@@ -769,6 +797,7 @@
         var improve = document.getElementById('improve_true').value;
 
         var projectName = document.getElementById('project_type').value;
+        localStorage.setItem('projectName', projectName)
 
         openai_key = localStorage.getItem('openai_key')
         // Get form data
@@ -805,9 +834,9 @@
             .then(data => {
                 if (data.success) {
                     document.querySelector('.preloader').style.display = 'none';
-
+                    localStorage.removeItem('projectName')
                     oldProjects(openai_key)
-                    document.getElementById('openaiForm2').style.display = 'none';
+                    // document.getElementById('openaiForm2').style.display = 'none';
                     document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
 
                     document.getElementById('download-message').style.display = 'block';
@@ -860,8 +889,10 @@
             });
     }
 
+    //function old clickoldprojects
     // Function to update the page content with user data
     function updateUserContent(data) {
+        console.log(data);
         var userDataContainer = document.getElementById('user-data-container');
         if (data && data.project_array) {
             // Clear existing content
@@ -897,13 +928,33 @@
                 projectParagraph.style.marginLeft = '10px'; // Add left margin for spacing
                 projectParagraph.style.color = 'white'; // Add left margin for spacing
                 projectParagraph.style.cursor = 'pointer';
+                // click on old project
                 projectParagraph.addEventListener('click', function () {
-                    document.getElementById('download-message').style.display = 'block';
+                    // document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = project.project_name;
                     document.getElementById('project_type').value = project.project_name;
+                    document.getElementById('pheading').style.display = 'block'
+                    document.getElementById('pheading').innerHTML = project.project_name;
                     document.getElementById('project_type').disabled = true
                     document.getElementById('improve_true').value = 'true'
                     document.getElementById('success-message').style.display = 'none';
+                    document.querySelector('.right-corner').style.display = 'block'
+
+                    if (project.last_three_messages && project.last_three_messages.length > 0) {
+                        displayMessages(project.last_three_messages);
+                        document.getElementById('openaiForm2').style.display = 'block';
+                        console.log(document.getElementById('openaiForm2'));
+                        document.getElementById('download-message').style.display = 'none';
+
+                    }
+                    else {
+                        document.getElementById('pName').style.display = 'block'
+
+
+                        document.getElementById('openaiForm2').style.display = 'none';
+
+                    }
+
                     // display improve form 
                     document.getElementById('improve').style.display = ' block';
                     document.getElementById('create').style.display = 'none';
@@ -1017,6 +1068,7 @@
         localStorage.setItem('messages', JSON.stringify(messageArray));
         // Retrieve the AI question from local storage
         const aiQuestion = aiMessage
+        document.getElementById('user-input').value=''
 
         // Make an API call to send the AI question and user's answer to the server
         fetch('/aiClarification', {
@@ -1089,54 +1141,69 @@
     }
 
     function handleMsgReceived(data) {
-        debugger
-        console.log(data);
-        var msg = data.msg;
-        document.querySelector('.preloader').style.display = 'none';
+        let projectName = localStorage.getItem('projectName')
+        if (projectName && openai_key == data.api_key && projectName == data.projectName) {
 
-        // Get the array from localStorage or initialize it if it doesn't exist
-        var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
+            console.log(data);
+            var msg = data.msg;
+            document.querySelector('.preloader').style.display = 'none';
 
-        // Add AI message to the array
-        messageArray.push({ type: 'ai', message: msg });
+            // Get the array from localStorage or initialize it if it doesn't exist
+            var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
 
-        // Store the updated array back to localStorage
-        localStorage.setItem('messages', JSON.stringify(messageArray));
+            // Add AI message to the array
+            messageArray.push({ type: 'ai', message: msg });
 
-        // Display the AI message
-        displayMessages();
+            // Store the updated array back to localStorage
+            localStorage.setItem('messages', JSON.stringify(messageArray));
 
-        // Show the user input form
-        document.getElementById('openaiForm2').style.display = 'block';
-        // document.getElementById('header').style.marginTop = "30px";
+            // Display the AI message
+            displayMessages();
 
-        document.getElementById('createpro').style.display = 'none'
+            // Show the user input form
+            document.getElementById('openaiForm2').style.display = 'block';
+            // document.getElementById('header').style.marginTop = "30px";
+            document.getElementById('pheading').style.display = 'block'
+                document.getElementById('pheading').innerHTML = projectName;
+                document.getElementById('pName').style.display = 'none'
+            document.getElementById('createpro').style.display = 'none'
+        }
     }
 
     function displayFilename(data) {
-        if (data.file_name) {
+        let projectName = localStorage.getItem('projectName')
+        if (projectName && openai_key == data.api_key && projectName == data.projectName) {
+            if (data.file_name) {
 
-            document.querySelector('.preloader').style.display = 'none';
+                document.querySelector('.preloader').style.display = 'none';
+                document.getElementById('pheading').style.display = 'block'
+                document.getElementById('pheading').innerHTML = data.projectName;
+                oldProjects(openai_key)
+                document.querySelector('.right-corner').style.display = 'block'
+                document.getElementById('pName').style.display = 'none'
+                document.getElementById('inputt').style.display = 'none';
+                document.getElementById('note').style.display = 'none';
 
-            oldProjects(openai_key)
-            document.getElementById('openaiForm2').style.display = 'none';
+                // document.getElementById('openaiForm2').style.display = 'none';
 
-            document.getElementById('download-message').style.display = 'block';
-            document.getElementById('file-name').innerHTML = data.file_name;
-            Swal.fire({
-                title: 'Success',
-                text: 'Project Created Successfully!',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
-        }
-        else {
-            Swal.fire({
-                title: 'Error',
-                text: 'Failed to Creating Project.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
+                // document.getElementById('download-message').style.display = 'block';
+                document.getElementById('file-name').innerHTML = data.file_name;
+                Swal.fire({
+                    title: 'Success',
+                    text: 'Project Created Successfully!',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            }
+            else {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Failed to Creating Project.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+            localStorage.removeItem('projectName')
         }
         // Access file name and API cost directly from JSON data
         file_name = data.file_name;
@@ -1147,7 +1214,6 @@
     var aiMessage;
     // Listen for the 'msg_received' event from the server
     socket.on('msg_received', function (data) {
-        debugger
         console.log(data);
         aiMessage = data.msg
         handleMsgReceived(data)
@@ -1178,34 +1244,80 @@
         });
     })
 
-    function displayMessages() {
-        var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
-
+    function displayMessages(lastThreeMessages) {
+        var firstUserQuestionDisplayed = false; // Variable to track whether the first user question has been displayed
         var formHTML = '';
 
-        messageArray.forEach(function (item) {
-            if (item.type === 'ai') {
-                formHTML += `
-                <div style="display: flex; align-items: center;">
-                    <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
-                        src="https://repository-images.githubusercontent.com/695656843/4cf5a417-43d3-4f49-8b6a-337045bc7d8b">
-                    <h3 style="margin: 0;">GPT-Engineer</h3>
-                </div>
-                <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
-            } else if (item.type === 'user') {
-                formHTML += `
-                <div style="display: flex; align-items: center;">
-                    <img width="31" style="border-radius: 100%; margin-right: 10px;"
-                        src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
-                        alt="">
-                    <h3 style="margin: 0;">You</h3>
-                </div>
-                <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
-            }
-        });
+        if (!lastThreeMessages) {
+            var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
+            // Remove the first message from the provided Messages array
 
+            // Display the messages from localStorage
+            messageArray.forEach(function (item) {
+                if (item.type === 'ai') {
+                    formHTML += `
+            <div style="display: flex; align-items: center;">
+                <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
+                    src="https://repository-images.githubusercontent.com/695656843/4cf5a417-43d3-4f49-8b6a-337045bc7d8b">
+                <h3 style="margin: 0;">GPT-Engineer</h3>
+            </div>
+            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
+                } else if (item.type === 'user') {
+                    formHTML += `
+            <div style="display: flex; align-items: center;">
+                <img width="31" style="border-radius: 100%; margin-right: 10px;"
+                    src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
+                    alt="">
+                <h3 style="margin: 0;">You</h3>
+            </div>
+            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
+                }
+            });
+        }
+        else {
+            if (lastThreeMessages.length > 0) {
+
+                Messages = lastThreeMessages.slice(1); // Remove the first message from lastThreeMessages
+                document.getElementById('inputt').style.display = 'none';
+                document.getElementById('note').style.display = 'none';
+                document.getElementById('pName').style.display = 'none'
+                // Display the messages from last_three_messages
+                Messages.forEach(function (msg, index) {
+                    if (index % 2 === 0) {
+                        // If index is even, it's a user message
+                        if (!firstUserQuestionDisplayed) {
+                            formHTML += `<br><br>`; // Add space from top before the first user question
+                            firstUserQuestionDisplayed = true; // Update the flag to indicate the first user question is displayed
+                        }
+                        // If index is even, it's a user message
+                        formHTML += `
+                
+            <div style="display: flex; align-items: center;">
+                <img width="31" style="border-radius: 100%; margin-right: 10px;"
+                    src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
+                    alt="">
+                <h3 style="margin: 0;">You</h3>
+            </div>
+            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${msg}</p><br>`;
+                    } else {
+                        // If index is odd, it's an AI message
+                        formHTML += `
+                
+
+            <div style="display: flex; align-items: center;">
+                <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
+                    src="https://repository-images.githubusercontent.com/695656843/4cf5a417-43d3-4f49-8b6a-337045bc7d8b">
+                <h3 style="margin: 0;">GPT-Engineer</h3>
+            </div>
+            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${msg}</p><br>`;
+                    }
+                });
+
+            }
+        }
         document.getElementById('messageContainer').innerHTML = formHTML;
     }
+
 
     function CreateNew() {
         document.getElementById('download-message').style.display = 'none';
@@ -1223,50 +1335,54 @@
 
     // Listen for the 'files_received' event from the server
     socket.on('files_received', function (data) {
-        console.log("files", data.files);
-        document.querySelector('.overlay').style.display = 'block';
-        document.querySelector('.popup').style.display = 'block';
-        document.querySelector('.preloader').style.display = 'none';
+        let projectName = localStorage.getItem('projectName')
+        if (projectName && openai_key == data.api_key && projectName == data.projectName) {
+            console.log("files", data.files);
+            document.querySelector('.overlay').style.display = 'block';
+            document.querySelector('.popup').style.display = 'block';
+            document.querySelector('.preloader').style.display = 'none';
 
-        // Disable interaction with the main container
+            // Disable interaction with the main container
 
-        var filesContainer = document.getElementById('filesContainer');
+            var filesContainer = document.getElementById('filesContainer');
+            // Clear existing checkboxes before adding new ones
+            filesContainer.innerHTML = '';
+            // Create checkboxes for each filename
+            data.files.forEach(function (filename) {
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'file';
+                checkbox.value = filename;
 
-        // Create checkboxes for each filename
-        data.files.forEach(function (filename) {
-            var checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.name = 'file';
-            checkbox.value = filename;
+                var label = document.createElement('label');
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(filename));
 
-            var label = document.createElement('label');
-            label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(filename));
-
-            filesContainer.appendChild(label);
-        });
-
-        // Add a submit button
-        var submitButton = document.getElementById('submitButton');
-        submitButton.addEventListener('click', function () {
-            // Retrieve the selected filenames
-            var selectedFiles = Array.from(filesContainer.querySelectorAll('input[name="file"]:checked')).map(function (checkbox) {
-                return checkbox.value;
+                filesContainer.appendChild(label);
             });
 
-            // Check if at least one file is selected
-            if (selectedFiles.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Oops...',
-                    text: 'Please select at least one file.',
+            // Add a submit button
+            var submitButton = document.getElementById('submitButton');
+            submitButton.addEventListener('click', function () {
+                // Retrieve the selected filenames
+                var selectedFiles = Array.from(filesContainer.querySelectorAll('input[name="file"]:checked')).map(function (checkbox) {
+                    return checkbox.value;
                 });
-                return;
-            }
 
-            // Submit the selected filenames to the server
-            submitSelectedFiles(selectedFiles);
-        });
+                // Check if at least one file is selected
+                if (selectedFiles.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Oops...',
+                        text: 'Please select at least one file.',
+                    });
+                    return;
+                }
+
+                // Submit the selected filenames to the server
+                submitSelectedFiles(selectedFiles);
+            });
+        }
     });
 
     function submitSelectedFiles(selectedFiles) {
@@ -1294,14 +1410,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // document.getElementById('pName').style.display = 'block'
 
                     document.querySelector('.preloader').style.display = 'none';
-                    ducument.getElementById('improve_true').style.display = 'none';
+                    document.getElementById('improve_true').style.display = 'none';
                     oldProjects(openai_key)
-                    document.getElementById('openaiForm2').style.display = 'none';
-                    document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
+                    // document.getElementById('openaiForm2').style.display = 'none';
+                    // document.getElementById('success-message').style.display = 'block';
+                    // document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
 
-                    document.getElementById('download-message').style.display = 'block';
+                    // document.getElementById('download-message').style.display = 'block';
                     document.getElementById('file-name').innerHTML = data.file_name;
                     Swal.fire({
                         title: 'Success',
@@ -1309,16 +1427,23 @@
                         icon: 'success',
                         confirmButtonText: 'OK'
                     });
+                    file_name = data.file_name;
+
                 }
-                file_name = data.file_name;
+                else {
+                    // Handle error
+                    console.error('Error:', data.error);
+                }
             })
             .catch(error => {
+                console.log('Network error:', error);
 
                 document.querySelector('.preloader').style.display = 'none';
 
                 console.error('Error:', error);
                 // Handle errors
             });
+        localStorage.removeItem('projectName')
     }
 
 

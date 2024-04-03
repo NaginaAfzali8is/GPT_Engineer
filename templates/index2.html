@@ -17,6 +17,8 @@
 
     <!-- SweetAlert JavaScript -->
     <!-- Add Font Awesome CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js"></script>
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         body {
@@ -430,6 +432,7 @@
 </body>
 <script>
     var projectElement;
+    var msg;
     function removekey() {
         localStorage.removeItem('openai_key');
         updateUserContent(null)
@@ -440,7 +443,7 @@
 
         document.getElementById('openkey').style.display = 'block';
         document.getElementById('removekey').style.display = 'none';
-onloadf()
+        onloadf()
     }
     function submitkey() {
         let openai_key = document.getElementById('openai_key').value;
@@ -514,7 +517,7 @@ onloadf()
             }
         }
 
-        
+
     }
 
     function downloadFile(filename) {
@@ -543,6 +546,8 @@ onloadf()
     });
 
     function onloadf() {
+        // Get the value of the 'msg' variable from the URL query parameters
+        msg = "{{ msg }}";
         // Retrieve the openai_key from localStorage
         let openai_key = localStorage.getItem('openai_key');
 
@@ -726,10 +731,21 @@ onloadf()
     function isValidOpenAIKey(key) {
         return typeof key === 'string' &&
             key.length >= 50 &&
-            key.startsWith('sk-') 
+            key.startsWith('sk-')
     }
 
-
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function () {
+        console.log('Connected to server');
+    });
+    socket.on('response', function (msg) {
+        // Handle the received message
+        alert('Received message: ' + msg);
+    });
+    function sendMessage() {
+        var message = document.getElementById('messageInput').value;
+        socket.emit('message', message);
+    }
 
 
 
@@ -786,6 +802,144 @@ onloadf()
     //         console.error('Error:', error);
     //     });
     // });
+
+    // Function to display SweetAlert pop-up with a question
+    // Function to display SweetAlert pop-up with a question
+    function showQuestionPopup(question, msg) {
+        const inputConfig = {
+            input: 'text', inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to type something!';
+                }
+            }
+        };
+
+        if (msg) {
+            inputConfig.inputPlaceholder = 'please calrify ';
+        }
+
+        return Swal.fire({
+            title: 'Question',
+            text: msg,
+            ...inputConfig,
+            showCancelButton: true,
+            confirmButtonText: 'Submit',
+            cancelButtonText: 'Cancel',
+            allowOutsideClick: false
+        });
+    }
+
+    // Function to handle the submission of the user's answer
+    function handleAnswerSubmission() {
+        showQuestionPopup('What do you want to clarify?', '{{ msg }}')
+            .then((result) => {
+                if (result.isConfirmed) {
+                    const userAnswer = result.value;
+                    // Handle the user's answer (e.g., send it to the server)
+                    console.log('User typed:', userAnswer);
+
+                    // Make an API call to send the question and answer to the server
+                    fetch('/aiClarification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ question: 'What do you want to clarify?', answer: userAnswer })
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Server response:', data);
+                            // Handle the server response if needed
+                        })
+                        .catch(error => {
+                            console.error('There was a problem with your fetch operation:', error);
+                            // Handle errors if needed
+                        });
+                }
+            });
+    }
+
+    // Function to handle the 'msg_received' event
+    function handleMsgReceived(data) {
+        
+        console.log(data);
+        var msg = data.msg;
+        document.querySelector('.preloader').style.display = 'none';
+
+        // Call the function to display the pop-up
+        showQuestionPopup('What do you want to clarify?', msg)
+            .then((result) => {
+                let userAnswer = "no";
+                if (result.isConfirmed) {
+                    userAnswer = result.value;
+                }
+
+                // Handle the user's answer (e.g., send it to the server)
+                console.log('User typed:', userAnswer);
+                document.querySelector('.preloader').style.display = 'block';
+
+                // Make an API call to send the question and answer to the server
+                fetch('/aiClarification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: 'What do you want to clarify?', answer: userAnswer })
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Server response:', data);
+                        // Handle the server response if needed
+                    })
+                    .catch(error => {
+                        console.error('There was a problem with your fetch operation:', error);
+                        // Handle errors if needed
+                    });
+            });
+    }
+    function displayFilename(data) {
+        if (data.filename) {
+
+            document.querySelector('.preloader').style.display = 'none';
+
+            oldProjects(openai_key)
+            document.getElementById('download-message').style.display = 'block';
+            document.getElementById('file-name').innerHTML = data.file_name;
+            Swal.fire({
+                title: 'Success',
+                text: 'Project Created Successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+        else {
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to Creating Project.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+        // Access file name and API cost directly from JSON data
+        file_name = data.file_name;
+
+        // Do something with the file name and API cost
+        console.log('File Name:', file_name);
+    }
+
+    // Listen for the 'msg_received' event from the server
+    socket.on('msg_received', handleMsgReceived);
+    socket.on('success_event', displayFilename);
 
 </script>
 
