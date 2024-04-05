@@ -153,10 +153,10 @@
             padding: 20px;
         }
 
-        h2 {
+        /* h2 {
             font-size: 1.2rem;
             margin-bottom: 15px;
-        }
+        } */
 
         .new-chat h2 {
             color: #fff;
@@ -229,13 +229,6 @@
             /* Inherit text color */
         }
 
-        .header a {
-            text-decoration: none;
-            /* Remove underline */
-            color: inherit;
-            /* Inherit text color */
-        }
-
         .header2 a {
             text-decoration: none;
             /* Remove underline */
@@ -252,7 +245,11 @@
         }
 
         /* ... your existing styles ... */
+/* Media query for MacBook screens */
+@media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
+    /* Your CSS rules specific to MacBook screens here */
 
+}
         /* Media queries for mobile responsiveness */
         @media only screen and (max-width: 768px) {
             .container {
@@ -261,7 +258,7 @@
 
             .header2 {
                 text-align: center;
-                margin-top: -40px;
+                margin-top: -20px;
             }
 
             .sidebar,
@@ -388,6 +385,15 @@
                 /* Show the close button on mobile */
             }
         }
+
+        /* Media query for MacBook screens */
+@media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
+    /* Your CSS rules specific to MacBook screens here */
+    .header2 {
+                text-align: center;
+                margin-top: -200px;
+            }
+}
 
         /* width */
         ::-webkit-scrollbar {
@@ -550,7 +556,7 @@
                 </a>
             </div>
             <div class="content">
-                <div class="header">
+                <div class="header" id="header">
                     <a href="https://i8is.com">
                         <img width="120px" src="https://i8is.com/wp-content/uploads/2023/09/New-Logo-min.png"
                             alt="Your Company Logo">
@@ -601,10 +607,14 @@
                 </div>
 
                 <form id="openaiForm2" style="height: 300px; margin-bottom: 0; overflow-y: auto; display: none;">
-                    <h1 id="pheading" style="color: #012152 !important; display: none;">Clarifications:</h1>
-                    <div id="note" style="background-color: lightgray; padding: 10px;">
-                        <strong>Note:</strong> (answer in text, or "c" to move on)
+                    
+                    <div id="pheading">
+                        <h3 style="display: inline-block; margin-left: 41px; margin-bottom: 0;">Project Name:</h3>
+                        <p id="ppheading" style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;font-weight: bold !important;"></p><br>
                     </div>
+                    <!-- <div id="note" style="background-color: lightgray; padding: 10px; margin-bottom: 10px; margin-left: 41px;">
+                        <strong>Note:</strong> (answer in text, or "no" to move on)
+                    </div> -->
                     <div id="messageContainer"></div>
                     <div id="inputt">
                         <input id="user-input" type="text" placeholder="Your answer here..."
@@ -640,7 +650,6 @@
                 </form>
 
 
-
             </div>
             <!-- Preloader -->
             <div class="preloader">
@@ -665,6 +674,7 @@
         document.getElementById('removekey').style.display = 'none';
         onloadf()
     }
+
     function submitkey() {
         openai_key = document.getElementById('openai_key').value;
         if (!openai_key) {
@@ -794,16 +804,30 @@
 
     document.getElementById("openaiForm").addEventListener("submit", function (event) {
         event.preventDefault();
+        localStorage.removeItem('messages');
+
         var improve = document.getElementById('improve_true').value;
 
-        var projectName = document.getElementById('project_type').value;
+        var projectname = document.getElementById('project_type').value;
+        var projectName = projectname.trim().replace(/ /g, '_');
         localStorage.setItem('projectName', projectName)
+
+        var project_description = document.getElementById('project_description').value;
+        // Get the array from localStorage or initialize it if it doesn't exist
+        var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
+
+// Add AI message to the array
+messageArray.push({ type: 'user', message: project_description });
+
+// Store the updated array back to localStorage
+localStorage.setItem('messages', JSON.stringify(messageArray));
 
         openai_key = localStorage.getItem('openai_key')
         // Get form data
         const formData = new FormData(event.target);
         // Append openai_key to formData
         formData.append('openai_key', openai_key);
+
         formData.append('project_type', projectName);
         if (improve == 'true') {
             formData.append('improve_true', true);
@@ -819,7 +843,6 @@
 
         // document.getElementById('createpro').style.display = 'none'
         document.getElementById('user-input').textContent = document.getElementById("project_description").value;
-        localStorage.removeItem('messages');
 
         fetch("/setup_openai_key", {
             method: "POST",
@@ -934,8 +957,8 @@
                     document.getElementById('file-name').innerHTML = project.project_name;
                     document.getElementById('project_type').value = project.project_name;
                     document.getElementById('pheading').style.display = 'block'
-                    document.getElementById('pheading').innerHTML = project.project_name;
-                    document.getElementById('project_type').disabled = true
+                    document.getElementById('ppheading').innerHTML = "<span style='color: #012152;'>" + project.project_name.replace(/_/g, ' ') + "</span>";
+
                     document.getElementById('improve_true').value = 'true'
                     document.getElementById('success-message').style.display = 'none';
                     document.querySelector('.right-corner').style.display = 'block'
@@ -945,12 +968,11 @@
                         document.getElementById('openaiForm2').style.display = 'block';
                         console.log(document.getElementById('openaiForm2'));
                         document.getElementById('download-message').style.display = 'none';
-
+                        document.getElementById('header').style.display = "none";
+        document.getElementById('header2').style.display = "block";
                     }
                     else {
                         document.getElementById('pName').style.display = 'block'
-
-
                         document.getElementById('openaiForm2').style.display = 'none';
 
                     }
@@ -1068,7 +1090,7 @@
         localStorage.setItem('messages', JSON.stringify(messageArray));
         // Retrieve the AI question from local storage
         const aiQuestion = aiMessage
-        document.getElementById('user-input').value=''
+        document.getElementById('user-input').value = ''
 
         // Make an API call to send the AI question and user's answer to the server
         fetch('/aiClarification', {
@@ -1164,9 +1186,10 @@
             document.getElementById('openaiForm2').style.display = 'block';
             // document.getElementById('header').style.marginTop = "30px";
             document.getElementById('pheading').style.display = 'block'
-                document.getElementById('pheading').innerHTML = projectName;
-                document.getElementById('pName').style.display = 'none'
-            document.getElementById('createpro').style.display = 'none'
+            document.getElementById('ppheading').innerHTML = "<span style='color: #012152;'>" + projectName.replace(/_/g, ' ') + "</span>";
+
+            // document.getElementById('pName').style.display = 'none'
+            document.getElementById('openaiForm').style.display = 'none'
         }
     }
 
@@ -1177,12 +1200,12 @@
 
                 document.querySelector('.preloader').style.display = 'none';
                 document.getElementById('pheading').style.display = 'block'
-                document.getElementById('pheading').innerHTML = data.projectName;
+                document.getElementById('ppheading').innerHTML = "<span style='color: #012152;'>" + projectName.replace(/_/g, ' ') + "</span>";
                 oldProjects(openai_key)
                 document.querySelector('.right-corner').style.display = 'block'
                 document.getElementById('pName').style.display = 'none'
                 document.getElementById('inputt').style.display = 'none';
-                document.getElementById('note').style.display = 'none';
+                // document.getElementById('note').style.display = 'none';
 
                 // document.getElementById('openaiForm2').style.display = 'none';
 
@@ -1251,10 +1274,13 @@
         if (!lastThreeMessages) {
             var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
             // Remove the first message from the provided Messages array
-
+document.getElementById('openaiForm2').style.height='400px'
             // Display the messages from localStorage
             messageArray.forEach(function (item) {
+                var firstUserQuestionDisplayedp = false; // Variable to track whether the first user question has been displayed
+
                 if (item.type === 'ai') {
+                    
                     formHTML += `
             <div style="display: flex; align-items: center;">
                 <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
@@ -1263,6 +1289,17 @@
             </div>
             <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
                 } else if (item.type === 'user') {
+                    // If index is even, it's a user message
+                    if (!firstUserQuestionDisplayedp) {
+                            // Display "Project Description" instead of user name in the first question
+                            formHTML += `
+                            <div style="display: flex; align-items: center;">
+                                <h3 style="margin-left: 41px; margin-top: 2px; margin-bottom: 6px;">Project Description</h3>
+                            </div>            
+                            <p style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;">${item.message}</p><br>`;
+                            firstUserQuestionDisplayedp = true; // Update the flag to indicate the first user question is displayed
+                        }
+                        else {
                     formHTML += `
             <div style="display: flex; align-items: center;">
                 <img width="31" style="border-radius: 100%; margin-right: 10px;"
@@ -1271,34 +1308,42 @@
                 <h3 style="margin: 0;">You</h3>
             </div>
             <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
-                }
+                        }
+                    }
             });
         }
         else {
             if (lastThreeMessages.length > 0) {
-// fgb
+                // fgb
                 Messages = lastThreeMessages.slice(1); // Remove the first message from lastThreeMessages
                 document.getElementById('inputt').style.display = 'none';
-                document.getElementById('note').style.display = 'none';
+                // document.getElementById('note').style.display = 'none';
                 document.getElementById('pName').style.display = 'none'
                 // Display the messages from last_three_messages
                 Messages.forEach(function (msg, index) {
                     if (index % 2 === 0) {
                         // If index is even, it's a user message
                         if (!firstUserQuestionDisplayed) {
-                            formHTML += `<br><br>`; // Add space from top before the first user question
+                            // Display "Project Description" instead of user name in the first question
+                            formHTML += `
+                            <div style="display: flex; align-items: center;">
+                                <h3 style="margin-left: 41px; margin-top: 2px; margin-bottom: 6px;">Project Description</h3>
+                            </div>            
+                            <p style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;">${msg}</p><br>`;
                             firstUserQuestionDisplayed = true; // Update the flag to indicate the first user question is displayed
                         }
-                        // If index is even, it's a user message
-                        formHTML += `
-                
-            <div style="display: flex; align-items: center;">
-                <img width="31" style="border-radius: 100%; margin-right: 10px;"
-                    src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
-                    alt="">
-                <h3 style="margin: 0;">You</h3>
-            </div>
-            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${msg}</p><br>`;
+                        else {
+                            // Display user's message
+                            // If index is even, it's a user message
+                            formHTML += `
+                            <div style="display: flex; align-items: center;">
+                                <img width="31" style="border-radius: 100%; margin-right: 10px;"
+                                    src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
+                                    alt="">
+                                <h3 style="margin: 0;">You</h3>
+                            </div>
+                            <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${msg}</p><br>`;
+                        }
                     } else {
                         // If index is odd, it's an AI message
                         formHTML += `
@@ -1320,9 +1365,9 @@
 
 
     function CreateNew() {
+        window.location.reload();
         document.getElementById('download-message').style.display = 'none';
         document.getElementById('project_type').value = '';
-        document.getElementById('project_type').disabled = false
         document.getElementById('improve_true').value = 'false'
 
         // display improve form 
@@ -1331,6 +1376,20 @@
         document.getElementById('createpro').style.display = 'block'
         document.getElementById('project_description').value = ''
         document.getElementById('createpro').innerHTML = 'Create Project';
+        document.getElementById('openaiForm2').style.display ='none'
+        document.getElementById('openaiForm').style.display ='block'
+        document.getElementById('pName').style.display = 'block'
+
+            // Array of IDs to be displayed
+        var idsToShow = ["element1", "element3"];
+
+        // Loop through each ID and set display to "block"
+        idsToShow.forEach(function(id) {
+            var element = document.getElementById(id);
+            if (element) {
+                element.style.display = "block";
+            }
+        });
     }
 
     // Listen for the 'files_received' event from the server
