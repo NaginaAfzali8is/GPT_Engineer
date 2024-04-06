@@ -245,11 +245,12 @@
         }
 
         /* ... your existing styles ... */
-/* Media query for MacBook screens */
-@media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
-    /* Your CSS rules specific to MacBook screens here */
+        /* Media query for MacBook screens */
+        @media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
+            /* Your CSS rules specific to MacBook screens here */
 
-}
+        }
+
         /* Media queries for mobile responsiveness */
         @media only screen and (max-width: 768px) {
             .container {
@@ -387,13 +388,14 @@
         }
 
         /* Media query for MacBook screens */
-@media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
-    /* Your CSS rules specific to MacBook screens here */
-    .header2 {
+        @media only screen and (min-width: 1024px) and (max-width: 1440px) and (min-height: 640px) {
+
+            /* Your CSS rules specific to MacBook screens here */
+            .header2 {
                 text-align: center;
                 margin-top: -200px;
             }
-}
+        }
 
         /* width */
         ::-webkit-scrollbar {
@@ -494,8 +496,7 @@
 
         .right-corner {
             position: fixed;
-            top: 30px;
-            right: 10px;
+            right: calc(10px + 2%); /* Assuming 2% of parent's width is desired */
             margin: 20px;
             padding: 10px;
             display: none;
@@ -540,21 +541,7 @@
             </div>
         </div>
         <div class="main">
-            <div class="right-corner">
-                <!-- Enhanced download button -->
-                <!-- <a href="/download" id="download-link" class="download-button"> -->
-                <a href="#" id="download-link" class="download-button" onclick="downloadFile(null)">
-
-                    <span id="file-name">Download File</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="feather feather-download">
-                        <polyline points="8 17 12 21 16 17"></polyline>
-                        <line x1="12" y1="12" x2="12" y2="21"></line>
-                        <line x1="7" y1="7" x2="17" y2="7"></line>
-                    </svg>
-                </a>
-            </div>
+            
             <div class="content">
                 <div class="header" id="header">
                     <a href="https://i8is.com">
@@ -607,10 +594,23 @@
                 </div>
 
                 <form id="openaiForm2" style="height: 300px; margin-bottom: 0; overflow-y: auto; display: none;">
-                    
+                    <div class="right-corner">
+                        <!-- Enhanced download button -->
+                        <!-- <a href="/download" id="download-link" class="download-button"> -->
+                            <p style="font-weight: bold !important; color: #012152;">Click here to download</p><a href="#" id="download-link" class="download-button" onclick="downloadFile(null)">
+                                <span id="file-name">Download File</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
+                                    <polyline points="8 17 12 21 16 17"></polyline>
+                                    <line x1="12" y1="12" x2="12" y2="21"></line>
+                                    <line x1="7" y1="7" x2="17" y2="7"></line>
+                                </svg>
+                            </a>
+                    </div>
                     <div id="pheading">
                         <h3 style="display: inline-block; margin-left: 41px; margin-bottom: 0;">Project Name:</h3>
-                        <p id="ppheading" style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;font-weight: bold !important;"></p><br>
+                        <p id="ppheading"
+                            style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;font-weight: bold !important;">
+                        </p><br>
                     </div>
                     <!-- <div id="note" style="background-color: lightgray; padding: 10px; margin-bottom: 10px; margin-left: 41px;">
                         <strong>Note:</strong> (answer in text, or "no" to move on)
@@ -816,11 +816,11 @@
         // Get the array from localStorage or initialize it if it doesn't exist
         var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
 
-// Add AI message to the array
-messageArray.push({ type: 'user', message: project_description });
+        // Add AI message to the array
+        messageArray.push({ type: 'user', message: project_description });
 
-// Store the updated array back to localStorage
-localStorage.setItem('messages', JSON.stringify(messageArray));
+        // Store the updated array back to localStorage
+        localStorage.setItem('messages', JSON.stringify(messageArray));
 
         openai_key = localStorage.getItem('openai_key')
         // Get form data
@@ -859,6 +859,8 @@ localStorage.setItem('messages', JSON.stringify(messageArray));
                     document.querySelector('.preloader').style.display = 'none';
                     localStorage.removeItem('projectName')
                     oldProjects(openai_key)
+                    // Display the AI message
+                    displayMessages();
                     // document.getElementById('openaiForm2').style.display = 'none';
                     document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
 
@@ -969,7 +971,7 @@ localStorage.setItem('messages', JSON.stringify(messageArray));
                         console.log(document.getElementById('openaiForm2'));
                         document.getElementById('download-message').style.display = 'none';
                         document.getElementById('header').style.display = "none";
-        document.getElementById('header2').style.display = "block";
+                        document.getElementById('header2').style.display = "block";
                     }
                     else {
                         document.getElementById('pName').style.display = 'block'
@@ -1107,6 +1109,8 @@ localStorage.setItem('messages', JSON.stringify(messageArray));
                 return response.json();
             })
             .then(data => {
+                // Display the AI message
+                displayMessages();
                 console.log('Server response:', data);
                 // Handle the server response if needed
             })
@@ -1194,6 +1198,8 @@ localStorage.setItem('messages', JSON.stringify(messageArray));
     }
 
     function displayFilename(data) {
+        // Display the AI message
+        displayMessages();
         let projectName = localStorage.getItem('projectName')
         if (projectName && openai_key == data.api_key && projectName == data.projectName) {
             if (data.file_name) {
@@ -1269,18 +1275,19 @@ localStorage.setItem('messages', JSON.stringify(messageArray));
 
     function displayMessages(lastThreeMessages) {
         var firstUserQuestionDisplayed = false; // Variable to track whether the first user question has been displayed
+        var firstUserQuestionDisplayedp = false; // Variable to track whether the first user question has been displayed
+
         var formHTML = '';
 
         if (!lastThreeMessages) {
             var messageArray = JSON.parse(localStorage.getItem('messages')) || [];
             // Remove the first message from the provided Messages array
-document.getElementById('openaiForm2').style.height='400px'
+            document.getElementById('openaiForm2').style.height = '400px'
             // Display the messages from localStorage
             messageArray.forEach(function (item) {
-                var firstUserQuestionDisplayedp = false; // Variable to track whether the first user question has been displayed
 
                 if (item.type === 'ai') {
-                    
+
                     formHTML += `
             <div style="display: flex; align-items: center;">
                 <img width="31" alt="" style="border-radius: 100%; margin-right: 10px;"
@@ -1291,16 +1298,16 @@ document.getElementById('openaiForm2').style.height='400px'
                 } else if (item.type === 'user') {
                     // If index is even, it's a user message
                     if (!firstUserQuestionDisplayedp) {
-                            // Display "Project Description" instead of user name in the first question
-                            formHTML += `
+                        // Display "Project Description" instead of user name in the first question
+                        formHTML += `
                             <div style="display: flex; align-items: center;">
                                 <h3 style="margin-left: 41px; margin-top: 2px; margin-bottom: 6px;">Project Description</h3>
                             </div>            
                             <p style="margin-left: 41px; margin-top: 2px; margin-bottom: 10px;">${item.message}</p><br>`;
-                            firstUserQuestionDisplayedp = true; // Update the flag to indicate the first user question is displayed
-                        }
-                        else {
-                    formHTML += `
+                        firstUserQuestionDisplayedp = true; // Update the flag to indicate the first user question is displayed
+                    }
+                    else {
+                        formHTML += `
             <div style="display: flex; align-items: center;">
                 <img width="31" style="border-radius: 100%; margin-right: 10px;"
                     src="https://cdn-icons-png.flaticon.com/512/21/21104.png"
@@ -1308,8 +1315,8 @@ document.getElementById('openaiForm2').style.height='400px'
                 <h3 style="margin: 0;">You</h3>
             </div>
             <p style="margin-left: 41px; margin-top: 2px; margin-bottom:10px;">${item.message}</p><br>`;
-                        }
                     }
+                }
             });
         }
         else {
@@ -1376,15 +1383,15 @@ document.getElementById('openaiForm2').style.height='400px'
         document.getElementById('createpro').style.display = 'block'
         document.getElementById('project_description').value = ''
         document.getElementById('createpro').innerHTML = 'Create Project';
-        document.getElementById('openaiForm2').style.display ='none'
-        document.getElementById('openaiForm').style.display ='block'
+        document.getElementById('openaiForm2').style.display = 'none'
+        document.getElementById('openaiForm').style.display = 'block'
         document.getElementById('pName').style.display = 'block'
 
-            // Array of IDs to be displayed
+        // Array of IDs to be displayed
         var idsToShow = ["element1", "element3"];
 
         // Loop through each ID and set display to "block"
-        idsToShow.forEach(function(id) {
+        idsToShow.forEach(function (id) {
             var element = document.getElementById(id);
             if (element) {
                 element.style.display = "block";
