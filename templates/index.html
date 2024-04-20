@@ -668,7 +668,21 @@
     let openai_key;
     function removekey() {
         localStorage.removeItem('openai_key');
+        localStorage.removeItem('messages');
+
         updateUserContent(null)
+        displayMessages()
+        document.getElementById('project_type').value=''
+        document.getElementById('openai_key').value=''
+        // display improve form 
+        document.getElementById('improve').style.display = ' none';
+                    document.getElementById('create').style.display = 'block';
+                    document.getElementById('createpro').innerHTML = 'Create Project';
+
+        document.getElementById('pName').style.display = 'block'
+        document.getElementById('openaiForm').style.display = 'block'
+        document.getElementById('openaiForm2').style.display = 'none';
+
         document.getElementById('download-message').style.display = 'none';
         let createProjectButton = document.getElementById('createpro');
 
