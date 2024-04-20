@@ -1,0 +1,110 @@
+To create a login system with a beautiful design using HTML and CSS, we will need the following core files:
+
+1. `index.html` - The main HTML file that users will interact with. It will contain the structure of the login form.
+2. `styles.css` - The CSS file that will style the login form to make it visually appealing.
+3. `login.js` - A JavaScript file to handle the login form submission and any front-end validation if needed.
+
+Let's start by creating the `index.html` file which will serve as the entry point for our login system.
+
+index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <form id="login-form">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html>
+```
+
+Next, we will create the `styles.css` file to add styling to our login form.
+
+styles.css
+```css
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #4cae4c;
+}
+```
+
+Finally, we will create a `login.js` file to handle the form submission. For simplicity, we will just prevent the default form submission and log the username and password to the console. In a real-world scenario, this would involve sending a request to a server.
+
+login.js
+```javascript
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    console.log('Login attempt:', username, password);
+    // In a real application, you would send these credentials to the server here.
+});
+```
+
+This concludes a fully working implementation of a login system with a beautiful design using HTML, CSS, and JavaScript. Please note that for a real-world application, you would need to handle the login on the server side, manage sessions, and implement security measures which are beyond the scope of this example.

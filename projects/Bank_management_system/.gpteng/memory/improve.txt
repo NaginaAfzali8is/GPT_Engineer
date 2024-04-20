@@ -1,0 +1,85 @@
+To make the application attractive with design, we need to update the `.kv` files which are used by the Kivy framework for UI design. We will add styling properties to the widgets in the `login_screen.kv` and `home_screen.kv` files. For the Python files, we will ensure that the classes and functions are well-organized and that the code is clean and readable. We will also update the `requirements.txt` to include the necessary dependencies for the Kivy framework and any additional libraries we might use for design enhancements.
+
+PLANNING:
+1. Update `login_screen.kv` to include styling properties such as colors, fonts, and padding to make the login screen more visually appealing.
+2. Update `home_screen.kv` to include similar styling properties to ensure consistency across the application.
+3. Ensure that `user.py`, `face_recognition.py`, and `location_manager.py` are well-structured and include comments for clarity.
+4. Update `requirements.txt` to include the Kivy version and any other dependencies needed for the application.
+
+OUTPUT:
+
+```python
+login_screen.kv
+<<<<<<< HEAD
+=======
+# Login Screen with enhanced design
+BoxLayout:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 10
+
+    Label:
+        text: 'Welcome to the App'
+        font_size: '24sp'
+        size_hint_y: None
+        height: '48dp'
+
+    TextInput:
+        id: login
+        hint_text: 'Username'
+        multiline: False
+        size_hint_y: None
+        height: '48dp'
+        padding_x: 10
+
+    TextInput:
+        id: password
+        hint_text: 'Password'
+        multiline: False
+        password: True
+        size_hint_y: None
+        height: '48dp'
+        padding_x: 10
+
+    Button:
+        text: 'Login'
+        size_hint_y: None
+        height: '48dp'
+        on_release: app.login(self)
+>>>>>>> updated
+```
+
+```python
+home_screen.kv
+<<<<<<< HEAD
+=======
+# Home Screen with enhanced design
+BoxLayout:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 10
+
+    Label:
+        text: 'Home Screen'
+        font_size: '24sp'
+        size_hint_y: None
+        height: '48dp'
+
+    Button:
+        text: 'Logout'
+        size_hint_y: None
+        height: '48dp'
+        on_release: app.logout(self)
+>>>>>>> updated
+```
+
+```python
+requirements.txt
+<<<<<<< HEAD
+=======
+# Requirements for the Kivy application
+Kivy==2.0.0
+>>>>>>> updated
+```
+
+Note: The above `.kv` files are basic examples of how to add styling to the Kivy UI elements. Depending on the actual requirements and the desired look and feel, more complex styling and additional widgets may be necessary. The `requirements.txt` file now specifies the version of Kivy to be used, and additional dependencies can be added as needed.

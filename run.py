@@ -198,6 +198,7 @@ Preprompts = None
 Memoryy = None
 project_Name = ''
 Api_Key = ''
+files = []
 
 
 @app.route('/setup_openai_key', methods=['POST'])
@@ -208,18 +209,10 @@ def setup_openai_key():
         projectName = projectname.strip().replace(' ', '_')
         projectDesc = request.form["project_description"]
         improve_mode = request.form["improve_true"]
-        global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, Agent
+        global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files, Agent
 
         Api_Key = openai_key
         project_Name = projectName
-        # Get user input for modes
-        # improve_mode = request.form.get("improve_mode") == "on"
-        # clarify_mode = request.form.get("clarify_mode") == "on"
-        # lite_mode = request.form.get("lite_mode") == "on"
-
-        # if improve_mode:
-        #     assert not (clarify_mode or lite_mode), "Clarify and lite mode are not active for improve mode"
-# Check if project name and key combination already exists
 
         lite_mode: bool = typer.Option(
             False,
@@ -269,108 +262,193 @@ def setup_openai_key():
                 # Process the response
                 print(response.data.decode('utf-8'))
                 if response.status_code == 200:
+                    try:
 
-                    # Replace spaces with underscores and strip leading/trailing spaces
-                    project_path = f"projects/{projectName}"
+                        # Replace spaces with underscores and strip leading/trailing spaces
+                        project_path = f"projects/{projectName}"
 
-                    # Create the project directory if it doesn't exist
-                    if not os.path.exists(project_path):
-                        os.makedirs(project_path)
-                    path = Path(project_path)
-                    print("Running gpt-engineer in", path.absolute(), "\n")
-                    # prompt = load_prompt(DiskMemory(path), improve_mode)
-                    # Set up the AI and project configuration
-                    ai = AI(
-                        model_name="gpt-4-1106-preview",  # Set your desired model
-                        temperature=0.1,
-                        azure_endpoint="",  # Set Azure endpoint if applicable
-                    )
-                    aI = ai
-                    logging.basicConfig(
-                        level=logging.DEBUG if verbose else logging.INFO)
+                        # Create the project directory if it doesn't exist
+                        if not os.path.exists(project_path):
+                            os.makedirs(project_path)
+                        path = Path(project_path)
+                        print("Running gpt-engineer in", path.absolute(), "\n")
+                        # prompt = load_prompt(DiskMemory(path), improve_mode)
+                        # Set up the AI and project configuration
+                        ai = AI(
+                            model_name="gpt-4-1106-preview",  # Set your desired model
+                            temperature=0.1,
+                            azure_endpoint="",  # Set Azure endpoint if applicable
+                        )
+                        aI = ai
+                        logging.basicConfig(
+                            level=logging.DEBUG if verbose else logging.INFO)
 
-                    prompt = projectDesc  # Use project description as prompt
-                    Preprompts = prompt
-                    # Configure functions and paths
-                    # configure generation function
-                    if clarify_mode and not improve_mode == 'true':
-                        code_gen_fn = clarified_generated
-                    else:
-                        code_gen_fn = gen_code
-                    execution_fn = execute_entrypoint
-                    improve_fn = improve
+                        prompt = projectDesc  # Use project description as prompt
+                        Preprompts = prompt
+                        # Configure functions and paths
+                        # configure generation function
+                        if clarify_mode and not improve_mode == 'true':
+                            try:
+                                code_gen_fn = clarified_generated
+                            except Exception as e:
+                                # Extract the error message from the exception
+                                error_message = e.args[0]
+                                # Split the error message to get the part before "Error code: 401 -"
+                                error_message_parts = error_message.split(
+                                    "Error code: 401 -")
+                                if len(error_message_parts) > 1:
+                                    error_message = error_message_parts[1].strip(
+                                    )
+                                else:
+                                    error_message = "Unknown error occurred"
 
-                    memory = DiskMemory(memory_path(project_path))
-                    execution_env = DiskExecutionEnv()
-                    agent = CliAgent.with_default_config(
-                        memory,
-                        execution_env,
-                        ai=ai,
-                        code_gen_fn=code_gen_fn,
-                        improve_fn=improve_fn,
-                    )
-                    Agent = agent
-                    store = FileStore(project_path)
-                    # sys.stdin = StringIO('n\n')
-                    # Save the original standard input
-                    # original_stdin = sys.stdin
-                    # Generate or improve project
-                    if improve_mode == 'true':
-                        fileselector = improve_Gen()
+                                print(
+                                    "An error occurred during agent initialization:", error_message)
 
-                    else:
-                        files_dict = agent.init(prompt)
-                    # collect user feedback if user consents
-                    # config = (code_gen_fn.__name__, execution_fn.__name__)
-                    # collect_and_send_human_review(
-                    #     prompt, model, temperature, config, agent.memory)
-                    # Restore the original standard input
-                    # sys.stdin = original_stdin
-                    # Create a zip file in memory
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                        for filename, content in files_dict.items():
-                            zip_file.writestr(filename, content)
-                    api_cost = ai.token_usage_log.usage_cost()
+                                # Return response as JSON
+                                response_data = {
+                                    'success': False,
+                                    'error': error_message,
+                                    'msg': 'from clarifygen'
+                                }
+                                return jsonify(response_data)
+                        else:
+                            code_gen_fn = gen_code
+                        execution_fn = execute_entrypoint
+                        improve_fn = improve
 
-                    # Save project zip file to MongoDB
-                    zip_file_binary = zip_buffer.getvalue()
-                    new_user = User(openai_key, projectName,
-                                    api_cost, zip_file_binary, [])
-                    inserted_id = new_user.save_to_mongo()
+                        memory = DiskMemory(memory_path(project_path))
+                        execution_env = DiskExecutionEnv()
+                        agent = CliAgent.with_default_config(
+                            memory,
+                            execution_env,
+                            ai=ai,
+                            code_gen_fn=code_gen_fn,
+                            improve_fn=improve_fn,
+                        )
+                        Agent = agent
+                        store = FileStore(project_path)
+                        # sys.stdin = StringIO('n\n')
+                        # Save the original standard input
+                        # original_stdin = sys.stdin
+                        # Generate or improve project
+                        if improve_mode == 'true':
+                            try:
+                                # fileselector = improve_Gen()
+                                project_data = User.get_by_project_name_and_api_key(project_Name, Api_Key)
+                                project_name = project_data['project_array'][0]
+                                project_zip_binary = project_name['project_zip_binary']
 
-                    if inserted_id:
-                        print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
-                    else:
-                        print("Failed to save project zip file to MongoDB.")
+                                # Extract the zip archive to a BytesIO object
+                                with zipfile.ZipFile(io.BytesIO(project_zip_binary), "r") as zip_ref:
+                                    extracted_files = zip_ref.namelist()
+                                # Return response as JSON
+                                files = extracted_files
+                                response_data = {
+                                    'success': True,
+                                    'files': extracted_files,
+                                    'projectName': project_Name,
+                                    'api_key': Api_Key,
+                                }
 
-                    zip_buffer.close()
+                                socketio.emit('files_received', response_data)
 
-                    if os.path.exists(project_path):
-                        # Create a zip file of the project directory
-                        shutil.rmtree(project_path)
-                    # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
-                    # for root, dirs, files in os.walk(project_path):
-                    #     for file in files:
-                    #         zipf.write(os.path.join(root, file), os.path.relpath(
-                    #             os.path.join(root, file), os.path.join(project_path, '..')))
-                    # zipf.close()
+                                # Render the template with the list of extracted file names
+                                return jsonify(response_data)
+                            except Exception as e:
+                                print("An error occurred:", str(e))
+                                response_data = {
+                                    'success': False,
+                                    'error': str(e),
+                                    'msg': 'improve'
+                                }
+                                return jsonify(response_data), 500
+                            
 
-                    print('OpenAI API key set successfully!')
+                        else:
+                            try:
+                                files_dict = agent.init(prompt)
+                            except Exception as e:
+                                # Extract the error message from the exception
+                                error_message = e.args[0]
+                                # Split the error message to get the part before "Error code: 401 -"
+                                error_message_parts = error_message.split(
+                                    "Error code: 401 -")
+                                if len(error_message_parts) > 1:
+                                    error_message = error_message_parts[1].strip(
+                                    )
+                                else:
+                                    error_message = "Unknown error occurred"
 
-                # Render the success template with necessary data
-                    # return render_template('index.html', success=True,apicost='$0.002345', file_name=f'{projectName}.zip', download_url=url_for('download', file_name=f'{projectName}.zip'))
-                    file_name = f'{projectName}.zip'
-                    api_cost = api_cost
+                                print(
+                                    "An error occurred during agent initialization:", error_message)
 
-                    # Return response as JSON
-                    response_data = {
-                        'success': True,
-                        'file_name': file_name,
-                        'api_cost': api_cost
-                    }
-                    return jsonify(response_data)
-                    print("OpenAI API key is set up.")
+                                # Return response as JSON
+                                response_data = {
+                                    'success': False,
+                                    'error': error_message,
+                                }
+                                return jsonify(response_data)
+                            # collect user feedback if user consents
+                        # config = (code_gen_fn.__name__, execution_fn.__name__)
+                        # collect_and_send_human_review(
+                        #     prompt, model, temperature, config, agent.memory)
+                        # Restore the original standard input
+                        # sys.stdin = original_stdin
+                        # Create a zip file in memory
+                        zip_buffer = io.BytesIO()
+                        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                            for filename, content in files_dict.items():
+                                zip_file.writestr(filename, content)
+                        api_cost = ai.token_usage_log.usage_cost()
+
+                        # Save project zip file to MongoDB
+                        zip_file_binary = zip_buffer.getvalue()
+                        new_user = User(openai_key, projectName,
+                                        api_cost, zip_file_binary, [])
+                        inserted_id = new_user.save_to_mongo()
+
+                        if inserted_id:
+                            print(f"Project zip file saved to MongoDB with ID: {
+                                  inserted_id}")
+                        else:
+                            print("Failed to save project zip file to MongoDB.")
+
+                        zip_buffer.close()
+
+                        if os.path.exists(project_path):
+                            # Create a zip file of the project directory
+                            shutil.rmtree(project_path)
+                        # zipf = zipfile.ZipFile(f'{projectName}.zip', 'w', zipfile.ZIP_DEFLATED)
+                        # for root, dirs, files in os.walk(project_path):
+                        #     for file in files:
+                        #         zipf.write(os.path.join(root, file), os.path.relpath(
+                        #             os.path.join(root, file), os.path.join(project_path, '..')))
+                        # zipf.close()
+
+                        print('OpenAI API key set successfully!')
+
+                    # Render the success template with necessary data
+                        # return render_template('index.html', success=True,apicost='$0.002345', file_name=f'{projectName}.zip', download_url=url_for('download', file_name=f'{projectName}.zip'))
+                        file_name = f'{projectName}.zip'
+                        api_cost = api_cost
+
+                        # Return response as JSON
+                        response_data = {
+                            'success': True,
+                            'file_name': file_name,
+                            'api_cost': api_cost
+                        }
+                        return jsonify(response_data)
+                        print("OpenAI API key is set up.")
+                    except Exception as e:
+                        print("An error occurred:", str(e))
+                        response_data = {
+                            'success': False,
+                            'error': str(e),
+                            'msg': 'from setupApi'
+                        }
+                        return jsonify(response_data), 500
                 else:
                     print("Failed to set OpenAI API key.")
                 # except Exception as e:
@@ -394,7 +472,7 @@ def success():
     # Accessing project_name and openai_key from session
     files_dict = ast.literal_eval(files_dict_str)
     zip_buffer = io.BytesIO()
-    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files
 
     with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
         for filename, content in files_dict.items():
@@ -534,7 +612,7 @@ def set_api_keyold():
 
 
 def improve_Gen():
-    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files
 
     project_data = User.get_by_project_name_and_api_key(project_Name, Api_Key)
     project_name = project_data['project_array'][0]
@@ -544,6 +622,7 @@ def improve_Gen():
     with zipfile.ZipFile(io.BytesIO(project_zip_binary), "r") as zip_ref:
         extracted_files = zip_ref.namelist()
     # Return response as JSON
+    files = extracted_files
     response_data = {
         'success': True,
         'files': extracted_files,
@@ -559,7 +638,7 @@ def improve_Gen():
 
 @app.route('/improveProject', methods=['POST'])
 def improveProject():
-    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, Agent
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files, Agent
     try:
         # Get the selected files from the request body
         selected_files = request.json
@@ -571,53 +650,60 @@ def improveProject():
 
             # Improve the files using the Agent
             improved_files = Agent.improve(files_dict, Preprompts)
+        else:
+            selected_files = files
+                # Convert the selected files list to a FilesDict object
+            files_dict = FilesDict(
+                {file_name: '' for file_name in selected_files})
+
+            # Improve the files using the Agent
+            improved_files = Agent.improve(files_dict, Preprompts)
 
             # Get the list of files in the original project
-            original_files = improve_Genn()
+        original_files = improve_Genn()
 
             # Combine original and improved files
-            all_files = original_files.copy()  # Start with original files
-            for filename, content in improved_files.items():
+        all_files = original_files.copy()  # Start with original files
+        for filename, content in improved_files.items():
                 # Replace existing files if they exist
-                if filename in all_files:
-                    all_files[filename] = content
-                else:
+            if filename in all_files:
+                all_files[filename] = content
+            else:
                     # Otherwise, add new files
-                    all_files[filename] = content
+                all_files[filename] = content
 
             # Create a zip file in memory
-            zip_buffer = io.BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 # Write all files (original and improved) to the zip file
-                for filename, content in all_files.items():
-                    zip_file.writestr(filename, content)
+            for filename, content in all_files.items():
+                zip_file.writestr(filename, content)
 
-            api_cost = aI.token_usage_log.usage_cost()
+        api_cost = aI.token_usage_log.usage_cost()
 
             # Save project zip file to MongoDB
-            zip_file_binary = zip_buffer.getvalue()
-            new_user = User(Api_Key, project_Name,
+        zip_file_binary = zip_buffer.getvalue()
+        new_user = User(Api_Key, project_Name,
                             api_cost, zip_file_binary, [])
-            inserted_id = new_user.save_to_mongo()
+        inserted_id = new_user.save_to_mongo()
 
-            if inserted_id:
-                print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
-            else:
-                print("Failed to save project zip file to MongoDB.")
+        if inserted_id:
+            print(f"Project zip file saved to MongoDB with ID: {
+                      inserted_id}")
+        else:
+            print("Failed to save project zip file to MongoDB.")
 
-            zip_buffer.close()
+        zip_buffer.close()
 
             # Return success response as JSON
-            file_name = f'{project_Name}.zip'
-            response_data = {
+        file_name = f'{project_Name}.zip'
+        response_data = {
                 'success': True,
                 'file_name': file_name,
                 'api_cost': api_cost
             }
-            return jsonify(response_data)
-        else:
-            # Return error response if no files were selected
-            return jsonify({'error': 'No files selected'}), 400
+        return jsonify(response_data)
+        
     except Exception as e:
         print('error', str(e))
         # Return error response if an exception occurs
@@ -625,7 +711,7 @@ def improveProject():
 
 
 def improve_Genn():
-    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files
 
     project_data = User.get_by_project_name_and_api_key(project_Name, Api_Key)
     project_name = project_data['project_array'][0]
@@ -642,7 +728,7 @@ def improve_Genn():
 
 @app.route('/improveProjectt', methods=['POST'])
 def improveProjectt():
-    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, Agent
+    global Messages, User_input, aI, Preprompts, Memoryy, project_Name, Api_Key, files, Agent
     try:
         # Get the selected files from the request body
         selected_files = request.json
@@ -687,7 +773,8 @@ def improveProjectt():
             inserted_id = new_user.save_to_mongo()
 
             if inserted_id:
-                print(f"Project zip file saved to MongoDB with ID: {inserted_id}")
+                print(f"Project zip file saved to MongoDB with ID: {
+                      inserted_id}")
             else:
                 print("Failed to save project zip file to MongoDB.")
 
@@ -820,24 +907,33 @@ def aiClarification():
 # Return an empty response with a success status code (200)
         return '', 200
     else:
-        print("Nothing to clarify")
+        try:
+            print("Nothing to clarify")
 
-        Messages = [
-            SystemMessage(content=setup_sys_prompt(Preprompts)),
-        ] + Messages[
-            1:
-        ]  # skip the first clarify message, which was the original clarify priming prompt
-        Messages = aI.next(
-            Messages,
-            Preprompts["generate"].replace(
-                "FILE_FORMAT", Preprompts["file_format"]),
-            step_name=curr_fn(),
-        )
-        chat = Messages[-1].content.strip()
-        Memoryy[CODE_GEN_LOG_FILE] = chat
-        files_dict = chat_to_files_dict(chat)
-        # Redirect to the /success route with necessary data
-        return redirect(url_for('success', files_dict=files_dict))
+            Messages = [
+                SystemMessage(content=setup_sys_prompt(Preprompts)),
+            ] + Messages[
+                1:
+            ]  # skip the first clarify message, which was the original clarify priming prompt
+            Messages = aI.next(
+                Messages,
+                Preprompts["generate"].replace(
+                    "FILE_FORMAT", Preprompts["file_format"]),
+                step_name=curr_fn(),
+            )
+            chat = Messages[-1].content.strip()
+            Memoryy[CODE_GEN_LOG_FILE] = chat
+            files_dict = chat_to_files_dict(chat)
+            # Redirect to the /success route with necessary data
+            return redirect(url_for('success', files_dict=files_dict))
+        except Exception as e:
+            print("An error occurred:", str(e))
+            response_data = {
+                'success': False,
+                'error': str(e),
+                'msg': 'from setupApi'
+            }
+            return jsonify(response_data), 500
 
 
 def set_key(file_path, key, value):

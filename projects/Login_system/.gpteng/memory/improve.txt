@@ -1,0 +1,107 @@
+To make the provided files more attractive, we will need to add some basic HTML structure, CSS styling, and JavaScript functionality. Here's a step-by-step plan for each file:
+
+1. **index.html**: Add a basic HTML5 structure with a form for login, including fields for username and password, and a submit button.
+
+2. **styles.css**: Add some CSS to style the form, inputs, and button to make them visually appealing. We'll use modern design trends such as rounded corners, subtle shadows, and a color scheme that is easy on the eyes.
+
+3. **login.js**: Add a simple JavaScript function to handle the form submission. This function will prevent the default form submission and instead log the username and password to the console (as a placeholder for actual authentication logic).
+
+Let's proceed with the changes:
+
+OUTPUT:
+
+```html
+index.html
+<<<<<<< HEAD
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <form id="loginForm">
+            <h2>Login</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+    <script src="login.js"></script>
+</body>
+</html>
+>>>>>>> updated
+```
+
+```css
+styles.css
+<<<<<<< HEAD
+=======
+.login-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    background: #f9f9f9;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #5cb85c;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #4cae4c;
+}
+>>>>>>> updated
+```
+
+```javascript
+login.js
+<<<<<<< HEAD
+=======
+document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    console.log('Login attempt:', username, password);
+    // Placeholder for actual login logic
+});
+>>>>>>> updated
+```
+
+These changes will create a simple yet more attractive login page with basic styling and functionality.

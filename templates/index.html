@@ -496,7 +496,8 @@
 
         .right-corner {
             position: fixed;
-            right: calc(10px + 2%); /* Assuming 2% of parent's width is desired */
+            right: calc(10px + 2%);
+            /* Assuming 2% of parent's width is desired */
             margin: 20px;
             padding: 10px;
             display: none;
@@ -510,7 +511,7 @@
 
     <div class="popup">
         <h2>Select Files</h2>
-        <p>Select files that you want to improve, at least 1 file is required</p> <!-- Add the note here -->
+        <p>Select files that you want to improve, or submit blank to </p> <!-- Add the note here -->
         <div id="filesContainer"></div>
         <button id="submitButton">Submit</button>
     </div>
@@ -541,7 +542,7 @@
             </div>
         </div>
         <div class="main">
-            
+
             <div class="content">
                 <div class="header" id="header">
                     <a href="https://i8is.com">
@@ -597,14 +598,17 @@
                     <div class="right-corner">
                         <!-- Enhanced download button -->
                         <!-- <a href="/download" id="download-link" class="download-button"> -->
-                            <p style="font-weight: bold !important; color: #012152;">Click here to download</p><a href="#" id="download-link" class="download-button" onclick="downloadFile(null)">
-                                <span id="file-name">Download File</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
-                                    <polyline points="8 17 12 21 16 17"></polyline>
-                                    <line x1="12" y1="12" x2="12" y2="21"></line>
-                                    <line x1="7" y1="7" x2="17" y2="7"></line>
-                                </svg>
-                            </a>
+                        <p style="font-weight: bold !important; color: #012152;">Click here to download</p><a href="#"
+                            id="download-link" class="download-button" onclick="downloadFile(null)">
+                            <span id="file-name">Download File</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                class="feather feather-download">
+                                <polyline points="8 17 12 21 16 17"></polyline>
+                                <line x1="12" y1="12" x2="12" y2="21"></line>
+                                <line x1="7" y1="7" x2="17" y2="7"></line>
+                            </svg>
+                        </a>
                     </div>
                     <div id="pheading">
                         <h3 style="display: inline-block; margin-left: 41px; margin-bottom: 0;">Project Name:</h3>
@@ -849,43 +853,74 @@
             body: formData
         })
             .then(response => {
+                debugger
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
                 return response.json(); // Parse JSON response
             })
             .then(data => {
+                debugger
                 if (data.success) {
                     document.querySelector('.preloader').style.display = 'none';
-                    localStorage.removeItem('projectName')
-                    oldProjects(openai_key)
-                    // Display the AI message
-                    displayMessages();
-                    // document.getElementById('openaiForm2').style.display = 'none';
-                    document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
+                    if (data.files) {
+                        displayFilesToSelect(data)
+                    }
+                    else {
+                        localStorage.removeItem('projectName')
+                        oldProjects(openai_key)
+                        // Display the AI message
+                        displayMessages();
+                        // document.getElementById('openaiForm2').style.display = 'none';
+                        document.getElementById('success-message').innerHTML = 'Your project has been Updated successfully. Click the button below to download it.'
 
-                    document.getElementById('download-message').style.display = 'block';
-                    document.getElementById('file-name').innerHTML = data.file_name;
-                    Swal.fire({
-                        title: 'Success',
-                        text: 'Project Updated Successfully!',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    });
+                        document.getElementById('download-message').style.display = 'block';
+                        document.getElementById('file-name').innerHTML = data.file_name;
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Project Updated Successfully!',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        });
+                        // Access file name and API cost directly from JSON data
+                        file_name = data.file_name;
+
+                        // Do something with the file name and API cost
+                        console.log('File Name:', file_name);
+                    }
                 }
-                // else {
-                //     Swal.fire({
-                //         title: 'Error',
-                //         text: 'Failed to Creating Project.',
-                //         icon: 'error',
-                //         confirmButtonText: 'OK'
-                //     });
-                // }
-                // Access file name and API cost directly from JSON data
-                file_name = data.file_name;
+                else {
+                    console.log(data);
+                    document.querySelector('.preloader').style.display = 'none';
 
-                // Do something with the file name and API cost
-                console.log('File Name:', file_name);
+                    // Parse the JSON string to an object
+                    let errorObject = data.error;
+                    let apiKeyPart;
+                    // Check if colon exists in the error message
+                    if (errorObject.includes(':')) {
+                        // Split the error message to get the part before the API key
+                        apiKeyPart = errorObject.split(':')[2]
+                        Swal.fire({
+                            title: 'Error',
+                            text: apiKeyPart, // Print the error message received from the server
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                    else if (data.msg == 'improve') {
+                        Swal.fire({
+                            title: 'Error',
+                            text: "Something went wrong please Try again letter", // Print the error message received from the server
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                    else {
+                        apiKeyPart = "Something went wrong please Try again letter"
+                    }
+
+                }
+
             })
         // .catch(error => {
         //     document.querySelector('.preloader').style.display = 'none';
@@ -1106,13 +1141,37 @@
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
+                displayMessages();
                 return response.json();
             })
             .then(data => {
-                // Display the AI message
-                displayMessages();
-                console.log('Server response:', data);
-                // Handle the server response if needed
+                if (data.success) {
+                    console.log("ai api response", data);
+                    document.querySelector('.preloader').style.display = 'none';
+
+                    if (data.msg) {
+                        aiMessage = data.msg
+                        handleMsgReceived(data)
+                    }
+                    else {
+                        displayFilename(data)
+                    }
+                    // Display the AI message
+                    displayMessages();
+                    console.log('Server response:', data);
+                    // Handle the server response if needed
+                }
+                else {
+                    console.log(data);
+                    document.querySelector('.preloader').style.display = 'none';
+
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Something went wrong, Please try again letter!',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
             })
         // .catch(error => {
         //     console.error('There was a problem with your fetch operation:', error);
@@ -1398,9 +1457,9 @@
             }
         });
     }
-
+    // socket.on('files_received', displayFilesToSelect)
     // Listen for the 'files_received' event from the server
-    socket.on('files_received', function (data) {
+    function displayFilesToSelect(data) {
         let projectName = localStorage.getItem('projectName')
         if (projectName && openai_key == data.api_key && projectName == data.projectName) {
             console.log("files", data.files);
@@ -1435,21 +1494,21 @@
                     return checkbox.value;
                 });
 
-                // Check if at least one file is selected
-                if (selectedFiles.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Oops...',
-                        text: 'Please select at least one file.',
-                    });
-                    return;
-                }
+                // // Check if at least one file is selected
+                // if (selectedFiles.length === 0) {
+                //     Swal.fire({
+                //         icon: 'warning',
+                //         title: 'Oops...',
+                //         text: 'Please select at least one file.',
+                //     });
+                //     return;
+                // }
 
                 // Submit the selected filenames to the server
                 submitSelectedFiles(selectedFiles);
             });
         }
-    });
+    };
 
     function submitSelectedFiles(selectedFiles) {
         // Send the selected filenames to the server
@@ -1497,8 +1556,17 @@
 
                 }
                 else {
+                    console.log(data);
+                    document.querySelector('.preloader').style.display = 'none';
+
                     // Handle error
                     console.error('Error:', data.error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Something went wrong, Please try again letter!',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 }
             })
             .catch(error => {
